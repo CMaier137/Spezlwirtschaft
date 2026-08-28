@@ -1,0 +1,12 @@
+name = "spezlwirtschaft"
+compatibility_date = "2024-09-01"
+pages_build_output_dir = "dist"
+
+# Nach dem Anlegen der D1-Datenbank (siehe README) die database_id hier eintragen.
+# Für das Deployment auf Cloudflare Pages muss dieselbe Bindung zusätzlich unter
+# Pages-Projekt > Settings > Functions > D1 database bindings gesetzt werden
+# (Binding-Name: DB).
+[[d1_databases]]
+binding = "DB"
+database_name = "spezlwirtschaft-db"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
