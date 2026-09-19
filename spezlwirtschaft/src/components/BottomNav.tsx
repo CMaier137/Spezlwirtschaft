@@ -14,8 +14,9 @@ export default function BottomNav() {
         <HeartIcon />
         <span>Wunsch</span>
       </NavLink>
-      <NavLink to="/besuch/neu" className="bottom-nav__fab" aria-label="Neuer Besuch">
-        <PlusIcon />
+      <NavLink to="/besuch/neu" className={itemClass}>
+        <RestaurantIcon />
+        <span>Hinzufügen</span>
       </NavLink>
       <NavLink to="/zahlungen" className={itemClass}>
         <WalletIcon />
@@ -51,10 +52,10 @@ function WalletIcon() {
   )
 }
 
-function PlusIcon() {
+function RestaurantIcon() {
   return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round">
-      <path d="M12 5v14M5 12h14" />
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M7 3v7a2 2 0 0 0 4 0V3M7 3v4M9 3v4M11 3v4M9 10v11M17 3c-1.7 0-3 1.8-3 4v4h3M17 3v18" />
     </svg>
   )
 }
