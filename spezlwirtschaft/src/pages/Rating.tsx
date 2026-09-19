@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import StarRating from '../components/StarRating'
+import BottomNav from '../components/BottomNav'
 import type { VisitDetail } from '../types'
 
 const CATEGORIES = [
@@ -29,10 +30,25 @@ export default function Rating() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [done, setDone] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
 
   useEffect(() => {
-    if (visitId) api.getVisit(visitId).then(setVisit)
-  }, [visitId])
+    if (!visitId) return
+    api.getVisit(visitId).then((v) => {
+      setVisit(v)
+      const existing = v.ratings.find((r) => r.user_id === currentUser?.id)
+      if (existing) {
+        setScores({
+          essen: existing.essen,
+          service: existing.service,
+          ambiente: existing.ambiente,
+          preis_leistung: existing.preis_leistung
+        })
+        setKommentar(existing.kommentar ?? '')
+        setIsEditing(true)
+      }
+    })
+  }, [visitId, currentUser])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -52,16 +68,28 @@ export default function Rating() {
     }
   }
 
-  if (!visit) return <div className="page-center">Lädt …</div>
+  if (!visit) {
+    return (
+      <div className="page">
+        <div className="page-center" style={{ flex: 1, minHeight: 0 }}>
+          Lädt …
+        </div>
+        <BottomNav />
+      </div>
+    )
+  }
 
   if (done) {
     return (
-      <div className="page-center">
-        <div className="page-title">Danke!</div>
-        <p className="hint">Deine Bewertung wurde gespeichert.</p>
-        <button className="btn btn--primary" onClick={() => navigate(`/restaurants/${visit.restaurant_id}`)}>
-          Zum Restaurant
-        </button>
+      <div className="page">
+        <div className="page-center" style={{ flex: 1, minHeight: 0 }}>
+          <div className="page-title">Danke!</div>
+          <p className="hint">Deine Bewertung wurde gespeichert.</p>
+          <button className="btn btn--primary" onClick={() => navigate(`/restaurants/${visit.restaurant_id}`)}>
+            Zum Restaurant
+          </button>
+        </div>
+        <BottomNav />
       </div>
     )
   }
@@ -76,6 +104,10 @@ export default function Rating() {
       </div>
 
       <div className="status-banner">{submittedCount} von 3 haben schon bewertet</div>
+
+      {isEditing && (
+        <div className="hint hint--center">Du hast diesen Besuch schon bewertet — du kannst deine Bewertung unten anpassen.</div>
+      )}
 
       <form className="form" onSubmit={handleSubmit}>
         {CATEGORIES.map((c) => (
@@ -98,9 +130,11 @@ export default function Rating() {
         {error && <div className="error">{error}</div>}
 
         <button type="submit" className="btn btn--primary" disabled={submitting}>
-          {submitting ? 'Speichert …' : 'Bewertung abschicken'}
+          {submitting ? 'Speichert …' : isEditing ? 'Bewertung aktualisieren' : 'Bewertung abschicken'}
         </button>
       </form>
+
+      <BottomNav />
     </div>
   )
 }
