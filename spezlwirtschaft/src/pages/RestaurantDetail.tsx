@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import BottomNav from '../components/BottomNav'
 import type { RestaurantDetail as RestaurantDetailType } from '../types'
 
 const CATEGORIES = [
@@ -19,7 +20,16 @@ export default function RestaurantDetail() {
     if (id) api.getRestaurant(id).then(setData)
   }, [id])
 
-  if (!data) return <div className="page-center">Lädt …</div>
+  if (!data) {
+    return (
+      <div className="page">
+        <div className="page-center" style={{ flex: 1, minHeight: 0 }}>
+          Lädt …
+        </div>
+        <BottomNav />
+      </div>
+    )
+  }
 
   return (
     <div className="page">
@@ -80,6 +90,8 @@ export default function RestaurantDetail() {
           </div>
         ))}
       </div>
+
+      <BottomNav />
     </div>
   )
 }
