@@ -2,7 +2,8 @@
 
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
-  name TEXT NOT NULL
+  name TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS restaurants (
@@ -50,8 +51,9 @@ CREATE TABLE IF NOT EXISTS wishlist_items (
 CREATE INDEX IF NOT EXISTS idx_visits_restaurant ON visits(restaurant_id);
 CREATE INDEX IF NOT EXISTS idx_ratings_visit ON ratings(visit_id);
 
--- Die drei festen Nutzer. Namen bei Bedarf anpassen (siehe README).
-INSERT OR IGNORE INTO users (id, name) VALUES
-  ('u-christian', 'Christian'),
-  ('u-basti', 'Basti'),
-  ('u-flo', 'Flo');
+-- Die drei festen Nutzer. Namen/Reihenfolge bei Bedarf anpassen (siehe README).
+-- sort_order legt die Anzeigereihenfolge fest (nicht alphabetisch).
+INSERT OR IGNORE INTO users (id, name, sort_order) VALUES
+  ('u-chris', 'Chris', 1),
+  ('u-maxi', 'Maxi', 2),
+  ('u-göki', 'Göki', 3);
