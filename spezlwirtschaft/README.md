@@ -76,6 +76,25 @@ public/icons/           PWA-Icons (Platzhalter — gerne durch eigene ersetzen)
 wrangler.toml           Cloudflare-Konfiguration (D1-Bindung)
 ```
 
+## Tests
+
+Eine End-to-End-Testsuite (`tests/e2e.mjs`) prüft bei jeder Änderung automatisch:
+
+- dass Frontend-Build und Functions-Typecheck fehlerfrei durchlaufen
+- alle API-Endpunkte (Restaurants, Besuche, Bewertungen, Wunschliste, Zahlungsstatistik)
+- die Score-Berechnung gegen die im Konzept dokumentierte Formel
+- Validierung (z. B. Sterne außerhalb 1–5, fehlender Name) und Fehlerfälle (404)
+- Sortierung/Filterung der Rangliste
+- dass der PWA-Build ein gültiges Manifest erzeugt
+
+Lokal ausführen:
+
+```bash
+npm run test:e2e
+```
+
+Das baut das Projekt, legt eine frische lokale Test-Datenbank an, startet die App lokal und räumt danach automatisch wieder auf — dauert ca. 30–60 Sekunden. **Läuft außerdem automatisch bei jedem Push und jedem Pull Request auf GitHub** (siehe `.github/workflows/ci.yml`, GitHub Actions) — kein Cloudflare-Account dafür nötig, alles läuft lokal simuliert. Ergebnis siehst du im Repo unter dem Tab **"Actions"**.
+
 ## API-Endpunkte
 
 | Methode | Pfad | Zweck |
