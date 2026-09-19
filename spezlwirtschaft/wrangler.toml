@@ -9,4 +9,4 @@ pages_build_output_dir = "dist"
 [[d1_databases]]
 binding = "DB"
 database_name = "spezlwirtschaft-db"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "79226108-29e7-45d3-b89a-1ab17acd2cab"
