@@ -11,7 +11,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env }) => {
      FROM users u
      LEFT JOIN visits v ON v.bezahlt_von = u.id
      GROUP BY u.id
-     ORDER BY u.name`
+     ORDER BY u.sort_order`
   ).all<{ id: string; name: string; count: number; total: number }>()
 
   const lastPaid = await env.DB.prepare(
