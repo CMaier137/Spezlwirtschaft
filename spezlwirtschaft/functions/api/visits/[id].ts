@@ -12,7 +12,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, params }) => {
   ).bind(id).first()
   if (!visit) return notFound('Besuch nicht gefunden')
 
-  const { results: allUsers } = await env.DB.prepare('SELECT id, name FROM users ORDER BY name').all()
+  const { results: allUsers } = await env.DB.prepare('SELECT id, name FROM users ORDER BY sort_order').all()
   const { results: submitted } = await env.DB.prepare(
     'SELECT user_id, essen, service, ambiente, preis_leistung, kommentar FROM ratings WHERE visit_id = ?1'
   ).bind(id).all()
