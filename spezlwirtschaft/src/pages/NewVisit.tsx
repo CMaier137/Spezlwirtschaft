@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
+import BottomNav from '../components/BottomNav'
 import type { RestaurantSummary } from '../types'
 
 export default function NewVisit() {
@@ -141,6 +142,8 @@ export default function NewVisit() {
           {submitting ? 'Speichert …' : 'Bewertung starten →'}
         </button>
       </form>
+
+      <BottomNav />
     </div>
   )
 }
