@@ -65,13 +65,15 @@ export default function Wishlist() {
         {visible.length === 0 && <div className="hint">Noch nichts auf der Liste.</div>}
         {visible.map((item) => (
           <div className="card wishlist-card" key={item.id}>
-            <button className="circle-checkbox" onClick={() => markDone(item.id)} aria-label="Als erledigt markieren" />
             <div>
               <div className="row-card__title">{item.name}</div>
               <div className="hint">{[item.ort, item.kueche].filter(Boolean).join(' · ')}</div>
               {item.notiz && <div className="comment">„{item.notiz}“</div>}
               <div className="hint hint--faint">vorgeschlagen von {item.vorgeschlagen_von_name}</div>
             </div>
+            <button className="remove-btn" onClick={() => markDone(item.id)} aria-label="Als erledigt markieren">
+              ✕
+            </button>
           </div>
         ))}
       </div>
