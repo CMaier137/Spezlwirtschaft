@@ -280,8 +280,14 @@ textarea { resize: vertical; }
 .segmented__option--active { background: var(--surface); color: var(--text); font-weight: 700; }
 
 .wishlist-card { display: flex; gap: 12px; align-items: flex-start; }
-.circle-checkbox { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-dashed); background: none; flex-shrink: 0; margin-top: 2px; }
-.circle-checkbox:hover { border-color: var(--accent); }
+.remove-btn {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: none; background: var(--track); color: var(--text-muted);
+  flex-shrink: 0; margin-left: auto;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; line-height: 1;
+}
+.remove-btn:hover { background: var(--border-dashed); color: var(--text); }
 
 .fab {
   position: absolute;
@@ -313,10 +319,3 @@ textarea { resize: vertical; }
   color: var(--text-muted); font-size: 10px;
 }
 .bottom-nav__item--active { color: var(--accent); font-weight: 600; }
-.bottom-nav__fab {
-  width: 46px; height: 46px; border-radius: 50%;
-  background: var(--accent);
-  display: flex; align-items: center; justify-content: center;
-  margin-top: -22px;
-  box-shadow: 0 3px 8px rgba(199, 106, 31, 0.35);
-}
