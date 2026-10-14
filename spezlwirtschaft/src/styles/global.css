@@ -23,6 +23,9 @@
 
 html, body, #root { height: 100%; }
 
+/* Verhindert den weißen Blitz beim Overscroll-Bounce auf iOS gegen den dunklen Hintergrund */
+html, body { overscroll-behavior-y: none; }
+
 body {
   margin: 0;
   background: var(--bg);
@@ -45,6 +48,9 @@ button { cursor: pointer; }
   flex-direction: column;
   background: var(--bg);
   padding-bottom: 8px;
+  /* Sicherer Abstand bei Geräten mit Notch/abgerundeten Ecken (braucht viewport-fit=cover in index.html) */
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Bayrische Rauten-Kante oben auf jeder Seite — rein dekorativ, kein Markup nötig */
@@ -104,7 +110,7 @@ button { cursor: pointer; }
   font-size: 14px;
   padding: 0;
 }
-.text-link:hover { color: var(--accent-light); }
+.text-link:hover, .text-link:active { color: var(--accent-light); }
 
 .back-link {
   background: none;
@@ -113,7 +119,7 @@ button { cursor: pointer; }
   font-size: 14px;
   padding: 0;
 }
-.back-link:hover { color: var(--accent-light); }
+.back-link:hover, .back-link:active { color: var(--accent-light); }
 
 .page-title {
   font-family: var(--font-display);
@@ -146,6 +152,7 @@ button { cursor: pointer; }
   white-space: nowrap;
 }
 .chip--active { background: var(--border-strong); border-color: var(--border-strong); color: var(--text-ink); font-weight: 600; }
+.chip:active { opacity: 0.75; }
 
 .sort-row {
   padding: 0 20px 14px;
@@ -158,8 +165,8 @@ button { cursor: pointer; }
 }
 .sort-row select {
   padding: 6px 10px;
-  border: 1.5px solid var(--border-strong);
-  border-radius: 8px;
+  border: 1.5px solid var(--border-dashed);
+  border-radius: 10px;
   font-weight: 600;
   background: var(--surface);
   color: var(--text-ink);
@@ -188,6 +195,7 @@ button { cursor: pointer; }
   color: var(--text-ink);
 }
 .row-card--first { border: 2px solid var(--border-strong); }
+.row-card:active { opacity: 0.8; }
 .row-card__body { flex: 1; min-width: 0; }
 .row-card__title { font-size: 16px; font-weight: 600; font-family: var(--font-display); color: var(--text-ink); }
 .row-card__meta { font-size: 12px; color: var(--text-muted-ink); }
@@ -219,12 +227,13 @@ button { cursor: pointer; }
 .user-card {
   width: 100%;
   padding: 16px 18px;
-  border: 2px solid var(--border-strong);
+  border: 1.5px solid var(--border);
   border-radius: 14px;
   background: var(--surface);
   display: flex; align-items: center; gap: 14px;
   text-align: left;
 }
+.user-card:active { transform: scale(0.98); }
 .user-card__name { font-size: 18px; font-weight: 700; font-family: var(--font-display); color: var(--text-ink); }
 
 .detail-header { padding: 14px 20px 16px; border-bottom: 2px dashed var(--border-dashed); }
@@ -252,7 +261,7 @@ button { cursor: pointer; }
   font-family: var(--font-display); font-size: 28px; color: var(--accent-light);
   flex-shrink: 0;
 }
-.score-summary__label { font-size: 14px; font-weight: 600; font-family: var(--font-display); color: var(--text); }
+.score-summary__label { font-size: 14px; font-weight: 600; color: var(--text); }
 
 .breakdown { padding: 16px 20px; display: flex; flex-direction: column; gap: 10px; border-bottom: 2px dashed var(--border-dashed); }
 .breakdown-row { display: flex; align-items: center; gap: 10px; }
@@ -265,15 +274,17 @@ button { cursor: pointer; }
 .section-title { font-family: var(--font-display); font-size: 20px; padding: 14px 20px 8px; color: var(--accent-light); }
 
 .visit-card__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.visit-card__date { font-size: 13px; font-weight: 700; font-family: var(--font-display); color: var(--text-ink); }
+.visit-card__date { font-size: 13px; font-weight: 600; color: var(--text-ink); }
 .comment { font-size: 12px; color: #6b5636; font-style: italic; margin-top: 6px; }
 
 .form { padding: 22px 20px; display: flex; flex-direction: column; gap: 20px; flex: 1; }
 .form--sheet { gap: 10px; flex: initial; }
 .field { display: flex; flex-direction: column; gap: 6px; }
-.field__label { font-size: 13px; color: var(--text-muted); font-weight: 600; }
+.field__label { font-size: 13px; color: var(--text-muted); font-weight: 500; }
 
 input, select, textarea {
+  /* Fest auf 16px, sonst zoomt iOS Safari beim Fokussieren rein */
+  font-size: 16px;
   padding: 13px 14px;
   background: var(--surface);
   color: var(--text-ink);
@@ -294,9 +305,10 @@ textarea { resize: vertical; }
   font-size: 13px; font-weight: 600; color: var(--text-muted);
 }
 .pill-select__option--active { border: 2px solid var(--accent); background: var(--accent); color: var(--text-ink); }
+.pill-select__option:active { opacity: 0.8; }
 
 .btn {
-  padding: 15px; text-align: center; border-radius: 12px; border: none;
+  padding: 14px; text-align: center; border-radius: 12px; border: none;
   font-size: 15px; font-weight: 700;
 }
 .btn--primary {
@@ -304,6 +316,7 @@ textarea { resize: vertical; }
   color: var(--text-ink);
   box-shadow: 0 3px 0 var(--accent-dark);
 }
+.btn--primary:active { box-shadow: 0 1px 0 var(--accent-dark); transform: translateY(2px); }
 .btn--primary:disabled { opacity: 0.6; box-shadow: none; }
 
 .error { color: #e07a52; font-size: 13px; }
@@ -312,12 +325,14 @@ textarea { resize: vertical; }
   margin: 0 20px 16px; padding: 8px 12px;
   background: rgba(207, 159, 63, 0.15);
   border: 1px solid rgba(207, 159, 63, 0.3);
-  border-radius: 8px;
+  border-radius: 10px;
   font-size: 12px; color: var(--accent-light); font-weight: 600; text-align: center;
 }
 
-.stars { display: flex; gap: 6px; }
-.star-btn { background: none; border: none; padding: 0; line-height: 0; }
+.stars { display: flex; gap: 2px; }
+/* Sichtbares Sternsymbol bleibt klein, Tap-Fläche wird über Padding auf ~44px erweitert */
+.star-btn { background: none; border: none; padding: 10px; line-height: 0; }
+.star-btn:active { transform: scale(0.9); }
 
 .add-row-btn {
   margin: 0 20px 16px;
@@ -331,6 +346,7 @@ textarea { resize: vertical; }
   text-align: center;
 }
 .add-row-btn:hover { border-color: var(--accent); }
+.add-row-btn:active { border-color: var(--accent); background: rgba(207, 159, 63, 0.1); transform: scale(0.99); }
 
 /* Zwei-Optionen-Umschalter (z.B. "Meine Liste" / "Alle") — gleiche Sprache wie .pill-select */
 .segmented { display: flex; gap: 8px; margin: 0 20px 16px; }
@@ -341,6 +357,7 @@ textarea { resize: vertical; }
   font-size: 13px; font-weight: 600; color: var(--text-muted);
 }
 .segmented__option--active { border: 2px solid var(--accent); background: var(--accent); color: var(--text-ink); }
+.segmented__option:active { opacity: 0.8; }
 
 /* Älterer "+"-Hinzufügen-Button — jetzt wie .btn--primary behandelt: eine gefüllte, eindeutige
    Primär-Aktion statt einer leeren gestrichelten Box mit einem winzigen "+" darin. */
@@ -365,13 +382,16 @@ textarea { resize: vertical; }
 
 .wishlist-card { display: flex; gap: 12px; align-items: flex-start; }
 .remove-btn {
-  width: 26px; height: 26px; border-radius: 50%;
+  /* 36px sichtbar, aber mit negativem Margin auf ~44px Tap-Fläche erweitert, ohne optisch zu dominieren */
+  width: 36px; height: 36px; margin: -5px -5px -5px auto;
+  border-radius: 50%;
   border: none; background: var(--track); color: var(--text-muted-ink);
-  flex-shrink: 0; margin-left: auto;
+  flex-shrink: 0;
   display: flex; align-items: center; justify-content: center;
   font-size: 15px; line-height: 1;
 }
 .remove-btn:hover { background: var(--border-dashed); color: var(--text); }
+.remove-btn:active { background: var(--border-dashed); color: var(--text); transform: scale(0.92); }
 
 .undo-toast {
   margin: 0 20px 16px;
@@ -397,12 +417,12 @@ textarea { resize: vertical; }
 }
 
 .callout {
-  margin: 0 20px 20px; padding: 14px 16px;
+  margin: 0 20px 16px; padding: 14px 16px;
   background: rgba(207, 159, 63, 0.12);
   border: 1px solid rgba(207, 159, 63, 0.3);
-  border-radius: 12px;
+  border-radius: 10px;
 }
-.callout__title { font-size: 14px; font-weight: 700; font-family: var(--font-display); color: var(--accent-light); }
+.callout__title { font-size: 14px; font-weight: 600; color: var(--accent-light); }
 .callout__sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
 
 .payment-card__top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
@@ -411,7 +431,9 @@ textarea { resize: vertical; }
 .bottom-nav {
   position: sticky;
   bottom: 0;
-  height: 72px;
+  min-height: 72px;
+  /* Wächst bei Geräten mit Home-Indicator mit, statt darunter zu verschwinden (braucht viewport-fit=cover in index.html) */
+  padding-bottom: env(safe-area-inset-bottom);
   border-top: 2px dashed var(--border-dashed);
   background: var(--bg-dim);
   display: flex; align-items: center; justify-content: space-around;
@@ -419,7 +441,10 @@ textarea { resize: vertical; }
 }
 .bottom-nav__item {
   display: flex; flex-direction: column; align-items: center; gap: 3px;
+  padding: 10px 6px;
+  min-width: 44px;
   color: var(--text-muted); font-size: 10px;
   background: none; border: none;
 }
 .bottom-nav__item--active { color: var(--accent-light); font-weight: 600; }
+.bottom-nav__item:active { color: var(--accent-light); }
