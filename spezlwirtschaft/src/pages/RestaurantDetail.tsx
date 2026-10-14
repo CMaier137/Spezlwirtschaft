@@ -92,13 +92,9 @@ export default function RestaurantDetail() {
                   </div>
                 ))}
               {ownRating ? (
-                <div className="hint hint--faint" style={{ marginTop: 6 }}>
-                  Deine Bewertung bearbeiten
-                </div>
+                <div className="rate-cta rate-cta--done">Deine Bewertung bearbeiten →</div>
               ) : (
-                <div className="status-banner" style={{ marginTop: 8 }}>
-                  Jetzt bewerten →
-                </div>
+                <div className="rate-cta">Jetzt bewerten →</div>
               )}
             </Link>
           )
