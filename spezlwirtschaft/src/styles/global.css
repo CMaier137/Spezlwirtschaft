@@ -273,6 +273,9 @@ button { cursor: pointer; }
 
 .section-title { font-family: var(--font-display); font-size: 20px; padding: 14px 20px 8px; color: var(--accent-light); }
 
+/* Besuchskarte ist jetzt ein Link zur Bewertungsseite (/besuch/:id/bewerten) */
+a.visit-card { display: block; text-decoration: none; color: inherit; }
+a.visit-card:active { opacity: 0.8; }
 .visit-card__top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
 .visit-card__date { font-size: 13px; font-weight: 600; color: var(--text-ink); }
 .comment { font-size: 12px; color: #6b5636; font-style: italic; margin-top: 6px; }
