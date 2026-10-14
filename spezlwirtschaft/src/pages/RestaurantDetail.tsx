@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import BottomNav from '../components/BottomNav'
+import { useUser } from '../context/UserContext'
 import type { RestaurantDetail as RestaurantDetailType } from '../types'
 
 const CATEGORIES = [
@@ -14,6 +15,7 @@ const CATEGORIES = [
 export default function RestaurantDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { currentUser } = useUser()
   const [data, setData] = useState<RestaurantDetailType | null>(null)
 
   useEffect(() => {
@@ -71,24 +73,36 @@ export default function RestaurantDetail() {
       <div className="section-title">Besuche</div>
       <div className="list">
         {data.visits.length === 0 && <div className="hint">Noch keine Besuche erfasst.</div>}
-        {data.visits.map((v) => (
-          <div className="card visit-card" key={v.id}>
-            <div className="visit-card__top">
-              <div className="visit-card__date">{formatDate(v.datum)}</div>
-              <div className="hint">
-                {v.avg != null ? `Ø ${v.avg.toFixed(1)}` : 'noch keine Bewertung'}
-                {v.bezahlt_von_name ? ` · bezahlt: ${v.bezahlt_von_name}` : ''}
-              </div>
-            </div>
-            {v.ratings
-              .filter((r) => r.kommentar)
-              .map((r, i) => (
-                <div className="comment" key={i}>
-                  „{r.kommentar}“ — {r.user_name}
+        {data.visits.map((v) => {
+          const ownRating = v.ratings.find((r) => r.user_name === currentUser?.name)
+          return (
+            <Link to={`/besuch/${v.id}/bewerten`} className="card visit-card" key={v.id}>
+              <div className="visit-card__top">
+                <div className="visit-card__date">{formatDate(v.datum)}</div>
+                <div className="hint">
+                  {v.avg != null ? `Ø ${v.avg.toFixed(1)}` : 'noch keine Bewertung'}
+                  {v.bezahlt_von_name ? ` · bezahlt: ${v.bezahlt_von_name}` : ''}
                 </div>
-              ))}
-          </div>
-        ))}
+              </div>
+              {v.ratings
+                .filter((r) => r.kommentar)
+                .map((r, i) => (
+                  <div className="comment" key={i}>
+                    „{r.kommentar}" — {r.user_name}
+                  </div>
+                ))}
+              {ownRating ? (
+                <div className="hint hint--faint" style={{ marginTop: 6 }}>
+                  Deine Bewertung bearbeiten
+                </div>
+              ) : (
+                <div className="status-banner" style={{ marginTop: 8 }}>
+                  Jetzt bewerten →
+                </div>
+              )}
+            </Link>
+          )
+        })}
       </div>
 
       <BottomNav />
