@@ -52,8 +52,10 @@ button { cursor: pointer; }
   content: '';
   display: block;
   flex-shrink: 0;
-  height: 7px;
-  background: repeating-linear-gradient(45deg, #1b3a66 0 9px, #e8e4d8 9px 18px);
+  height: 12px;
+  margin-top: 6px;
+  background: repeating-linear-gradient(45deg, #1b3a66 0 11px, #e8e4d8 11px 22px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
 }
 
 .page-center {
@@ -329,6 +331,31 @@ textarea { resize: vertical; }
   text-align: center;
 }
 .add-row-btn:hover { border-color: var(--accent); }
+
+/* Zwei-Optionen-Umschalter (z.B. "Meine Liste" / "Alle") — gleiche Sprache wie .pill-select */
+.segmented { display: flex; gap: 8px; margin: 0 20px 16px; }
+.segmented__option {
+  flex: 1; text-align: center; padding: 10px 0;
+  border-radius: 10px; border: 1.5px solid var(--border-dashed);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 13px; font-weight: 600; color: var(--text-muted);
+}
+.segmented__option--active { border: 2px solid var(--accent); background: var(--accent); color: var(--text-ink); }
+
+/* Älterer "+"-Hinzufügen-Button — identisch zu .add-row-btn, falls diese Klasse noch im Einsatz ist */
+.fab {
+  margin: 0 20px 16px;
+  padding: 14px;
+  border: 2px dashed var(--border-dashed);
+  border-radius: 12px;
+  background: none;
+  color: var(--accent-light);
+  font-weight: 700;
+  font-size: 14px;
+  text-align: center;
+  width: calc(100% - 40px);
+}
+.fab:hover { border-color: var(--accent); }
 
 .wishlist-card { display: flex; gap: 12px; align-items: flex-start; }
 .remove-btn {
