@@ -19,9 +19,10 @@ export default function Wishlist() {
   }
   useEffect(reload, [])
 
-  const visible = (tab === 'mine' ? items.filter((i) => i.vorgeschlagen_von === currentUser?.id) : items).filter(
-    (i) => i.status === 'offen'
-  )
+  const openItems = items.filter((i) => i.status === 'offen')
+  const mineCount = openItems.filter((i) => i.vorgeschlagen_von === currentUser?.id).length
+  const allCount = openItems.length
+  const visible = tab === 'mine' ? openItems.filter((i) => i.vorgeschlagen_von === currentUser?.id) : openItems
 
   async function handleAdd(e: FormEvent) {
     e.preventDefault()
@@ -51,13 +52,13 @@ export default function Wishlist() {
           className={`segmented__option ${tab === 'mine' ? 'segmented__option--active' : ''}`}
           onClick={() => setTab('mine')}
         >
-          Meine Liste
+          Meine Liste<span className="segmented__count">{mineCount}</span>
         </button>
         <button
           className={`segmented__option ${tab === 'all' ? 'segmented__option--active' : ''}`}
           onClick={() => setTab('all')}
         >
-          Alle
+          Alle<span className="segmented__count">{allCount}</span>
         </button>
       </div>
 
