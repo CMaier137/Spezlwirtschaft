@@ -97,13 +97,15 @@ export default function Wishlist() {
                 <div className="hint">{[item.ort, item.kueche].filter(Boolean).join(' · ')}</div>
                 {item.notiz && <div className="comment">„{item.notiz}“</div>}
                 <div className="hint hint--faint">vorgeschlagen von {item.vorgeschlagen_von_name}</div>
-                <button
-                  className={`like-btn ${item.liked_by_me ? 'like-btn--liked' : ''}`}
-                  onClick={() => handleLike(item.id)}
-                >
-                  <span className="like-btn__heart">{item.liked_by_me ? '♥' : '♡'}</span>
-                  {item.like_count}
-                </button>
+                {tab === 'all' && (
+                  <button
+                    className={`like-btn ${item.liked_by_me ? 'like-btn--liked' : ''}`}
+                    onClick={() => handleLike(item.id)}
+                  >
+                    <span className="like-btn__heart">{item.liked_by_me ? '♥' : '♡'}</span>
+                    {item.like_count}
+                  </button>
+                )}
               </div>
               <button className="remove-btn" onClick={() => markDone(item.id)} aria-label="Als erledigt markieren">
                 ✕

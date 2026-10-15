@@ -37,5 +37,11 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     'INSERT INTO wishlist_items (id, vorgeschlagen_von, name, ort, kueche, notiz) VALUES (?1, ?2, ?3, ?4, ?5, ?6)'
   ).bind(id, body.vorgeschlagen_von, body.name, body.ort ?? null, body.kueche ?? null, body.notiz ?? null).run()
 
+  // Wer etwas vorschlägt, will es ja selbst auch — automatischer Erst-Like
+  // vom Vorschlagenden, damit "Meistgewünscht" von Anfang an stimmt.
+  await env.DB.prepare('INSERT INTO wishlist_likes (id, wishlist_item_id, user_id) VALUES (?1, ?2, ?3)')
+    .bind(newId('wl'), id, body.vorgeschlagen_von)
+    .run()
+
   return json({ id }, { status: 201 })
 }
