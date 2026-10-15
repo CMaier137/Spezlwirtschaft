@@ -499,6 +499,8 @@ textarea { resize: vertical; }
   border: 1.5px solid var(--border-dashed); border-radius: 12px;
   background: rgba(0, 0, 0, 0.18); color: var(--text-muted); font-size: 12px; font-weight: 600;
 }
+a.home-shortcut { display: block; text-decoration: none; }
+a.home-shortcut:active { border-color: var(--accent); background: rgba(207, 159, 63, 0.1); }
 .home-shortcut__n { display: block; font-family: var(--font-display); font-size: 22px; color: var(--accent-light); margin-bottom: 2px; }
 
 .bottom-nav {

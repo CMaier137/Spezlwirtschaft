@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import BottomNav from '../components/BottomNav'
@@ -41,7 +42,7 @@ export default function Home() {
         <div className="home-greeting__hey">Servus, {currentUser?.name}!</div>
       </div>
 
-      <div className="home-spruch">„Du Baur du Elendiger, lass da schmecka!“</div>
+      <div className="home-spruch">Du Baur du Elendiger, lass da schmecka!</div>
 
       <div className="coaster-stage">
         <div className="coaster-wrap">
@@ -70,9 +71,9 @@ export default function Home() {
                 SPEZLWIRTSCHAFT
               </textPath>
             </text>
-            <text fontFamily="'IM Fell English', serif" fontSize="9" letterSpacing="2" fill="#8a5a1f" opacity="0.7">
+            <text fontFamily="'IM Fell English', serif" fontSize="8.5" letterSpacing="1" fill="#8a5a1f" opacity="0.7">
               <textPath href="#homeCoasterArcBot" startOffset="50%" textAnchor="middle">
-                STAMMTISCH SEIT 2026
+                STAMMTISCH SEIT 1994
               </textPath>
             </text>
             <text
@@ -108,9 +109,9 @@ export default function Home() {
       </div>
 
       <div className="home-shortcuts">
-        <div className="home-shortcut">
+        <Link to="/rangliste" className="home-shortcut">
           <span className="home-shortcut__n">{pendingCount ?? '—'}</span>offen zu bewerten
-        </div>
+        </Link>
         <div className="home-shortcut">
           <span className="home-shortcut__n">{wishlistCount ?? '—'}</span>auf der Wunschliste
         </div>
