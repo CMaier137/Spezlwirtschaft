@@ -399,6 +399,14 @@ textarea { resize: vertical; }
 .segmented__option:active { opacity: 0.8; }
 .segmented__count { margin-left: 4px; font-weight: 700; opacity: 0.65; }
 
+/* Kleiner Sortier-Umschalter innerhalb eines Tabs (z.B. Wunschliste "Alle") */
+.sort-toggle-mini { display: flex; gap: 6px; margin: 0 20px 14px; }
+.sort-toggle-mini button {
+  padding: 5px 12px; border-radius: 12px; border: 1.5px solid var(--border-dashed);
+  background: none; color: var(--text-muted); font-size: 11px; font-weight: 600;
+}
+.sort-toggle-mini button.active { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-light); }
+
 /* Älterer "+"-Hinzufügen-Button — jetzt wie .btn--primary behandelt: eine gefüllte, eindeutige
    Primär-Aktion statt einer leeren gestrichelten Box mit einem winzigen "+" darin. */
 .fab {
@@ -420,7 +428,25 @@ textarea { resize: vertical; }
 }
 .fab:active { box-shadow: 0 1px 0 var(--accent-dark); transform: translateY(2px); }
 
-.wishlist-card { display: flex; gap: 12px; align-items: flex-start; }
+.wishlist-card { position: relative; display: flex; gap: 12px; align-items: flex-start; }
+.wishlist-card--top { border-color: var(--accent); }
+
+.badge-popular {
+  position: absolute; top: -9px; left: 16px;
+  background: var(--accent); color: var(--text-ink);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.3px;
+  padding: 2px 8px; border-radius: 8px;
+}
+
+.like-btn {
+  display: inline-flex; align-items: center; gap: 5px; margin-top: 8px;
+  padding: 4px 10px; border-radius: 14px; border: 1.5px solid var(--border-dashed);
+  background: none; color: var(--text-muted-ink); font-size: 12px; font-weight: 700;
+}
+.like-btn--liked { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-dark); }
+.like-btn:active { transform: scale(0.96); }
+.like-btn__heart { font-size: 13px; }
+
 .remove-btn {
   /* 36px sichtbar, aber mit negativem Margin auf ~44px Tap-Fläche erweitert, ohne optisch zu dominieren */
   width: 36px; height: 36px; margin: -5px -5px -5px auto;

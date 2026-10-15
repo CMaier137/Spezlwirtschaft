@@ -41,13 +41,19 @@ export const api = {
     kommentar?: string
   }) => request<{ ok: true }>('/ratings', { method: 'POST', body: JSON.stringify(data) }),
 
-  getWishlist: () => request<WishlistItem[]>('/wishlist'),
+  getWishlist: (userId?: string) => request<WishlistItem[]>(`/wishlist${userId ? `?user_id=${userId}` : ''}`),
 
   createWishlistItem: (data: { vorgeschlagen_von: string; name: string; ort?: string; kueche?: string; notiz?: string }) =>
     request<{ id: string }>('/wishlist', { method: 'POST', body: JSON.stringify(data) }),
 
   updateWishlistStatus: (id: string, status: 'offen' | 'erledigt') =>
     request<{ ok: true }>(`/wishlist/${id}`, { method: 'PATCH', body: JSON.stringify({ status }) }),
+
+  toggleWishlistLike: (id: string, userId: string) =>
+    request<{ liked: boolean; like_count: number }>(`/wishlist/${id}/like`, {
+      method: 'POST',
+      body: JSON.stringify({ user_id: userId })
+    }),
 
   getPaymentStats: () => request<PaymentStats>('/stats/payments')
 }

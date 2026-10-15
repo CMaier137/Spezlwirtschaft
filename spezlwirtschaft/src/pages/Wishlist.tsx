@@ -8,6 +8,7 @@ export default function Wishlist() {
   const { currentUser } = useUser()
   const [items, setItems] = useState<WishlistItem[]>([])
   const [tab, setTab] = useState<'mine' | 'all'>('mine')
+  const [sortMode, setSortMode] = useState<'popular' | 'neu'>('popular')
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
   const [ort, setOrt] = useState('')
@@ -15,14 +16,25 @@ export default function Wishlist() {
   const [notiz, setNotiz] = useState('')
 
   function reload() {
-    api.getWishlist().then(setItems)
+    api.getWishlist(currentUser?.id).then(setItems)
   }
-  useEffect(reload, [])
+  useEffect(reload, [currentUser])
 
   const openItems = items.filter((i) => i.status === 'offen')
   const mineCount = openItems.filter((i) => i.vorgeschlagen_von === currentUser?.id).length
   const allCount = openItems.length
-  const visible = tab === 'mine' ? openItems.filter((i) => i.vorgeschlagen_von === currentUser?.id) : openItems
+  const visible =
+    tab === 'mine'
+      ? openItems.filter((i) => i.vorgeschlagen_von === currentUser?.id)
+      : sortMode === 'popular'
+        ? [...openItems].sort((a, b) => b.like_count - a.like_count || (a.created_at < b.created_at ? 1 : -1))
+        : openItems
+
+  async function handleLike(id: string) {
+    if (!currentUser) return
+    await api.toggleWishlistLike(id, currentUser.id)
+    reload()
+  }
 
   async function handleAdd(e: FormEvent) {
     e.preventDefault()
@@ -62,21 +74,43 @@ export default function Wishlist() {
         </button>
       </div>
 
+      {tab === 'all' && (
+        <div className="sort-toggle-mini">
+          <button className={sortMode === 'popular' ? 'active' : ''} onClick={() => setSortMode('popular')}>
+            Meistgewünscht
+          </button>
+          <button className={sortMode === 'neu' ? 'active' : ''} onClick={() => setSortMode('neu')}>
+            Neueste
+          </button>
+        </div>
+      )}
+
       <div className="list">
         {visible.length === 0 && <div className="hint">Noch nichts auf der Liste.</div>}
-        {visible.map((item) => (
-          <div className="card wishlist-card" key={item.id}>
-            <div>
-              <div className="row-card__title">{item.name}</div>
-              <div className="hint">{[item.ort, item.kueche].filter(Boolean).join(' · ')}</div>
-              {item.notiz && <div className="comment">„{item.notiz}“</div>}
-              <div className="hint hint--faint">vorgeschlagen von {item.vorgeschlagen_von_name}</div>
+        {visible.map((item, i) => {
+          const isTop = tab === 'all' && sortMode === 'popular' && i === 0 && item.like_count > 0
+          return (
+            <div className={`card wishlist-card ${isTop ? 'wishlist-card--top' : ''}`} key={item.id}>
+              {isTop && <div className="badge-popular">Beliebt</div>}
+              <div>
+                <div className="row-card__title">{item.name}</div>
+                <div className="hint">{[item.ort, item.kueche].filter(Boolean).join(' · ')}</div>
+                {item.notiz && <div className="comment">„{item.notiz}“</div>}
+                <div className="hint hint--faint">vorgeschlagen von {item.vorgeschlagen_von_name}</div>
+                <button
+                  className={`like-btn ${item.liked_by_me ? 'like-btn--liked' : ''}`}
+                  onClick={() => handleLike(item.id)}
+                >
+                  <span className="like-btn__heart">{item.liked_by_me ? '♥' : '♡'}</span>
+                  {item.like_count}
+                </button>
+              </div>
+              <button className="remove-btn" onClick={() => markDone(item.id)} aria-label="Als erledigt markieren">
+                ✕
+              </button>
             </div>
-            <button className="remove-btn" onClick={() => markDone(item.id)} aria-label="Als erledigt markieren">
-              ✕
-            </button>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       {showForm ? (

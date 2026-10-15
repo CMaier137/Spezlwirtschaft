@@ -10,6 +10,8 @@
     "pages:dev": "npm run build && wrangler pages dev dist",
     "db:migrate:local": "wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0001_init.sql",
     "db:migrate:remote": "wrangler d1 execute spezlwirtschaft-db --remote --file=./migrations/0001_init.sql",
+    "db:migrate:local:0002": "wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0002_wishlist_likes.sql",
+    "db:migrate:remote:0002": "wrangler d1 execute spezlwirtschaft-db --remote --file=./migrations/0002_wishlist_likes.sql",
     "test:e2e": "node tests/e2e.mjs"
   },
   "dependencies": {

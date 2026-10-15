@@ -3,12 +3,13 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import BottomNav from '../components/BottomNav'
-import type { RestaurantSummary } from '../types'
+import type { RestaurantSummary, WishlistItem } from '../types'
 
 export default function NewVisit() {
   const navigate = useNavigate()
   const { users, currentUser } = useUser()
   const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([])
+  const [topWishes, setTopWishes] = useState<WishlistItem[]>([])
   const [restaurantId, setRestaurantId] = useState('')
   const [creatingNew, setCreatingNew] = useState(false)
   const [newName, setNewName] = useState('')
@@ -25,8 +26,25 @@ export default function NewVisit() {
   }, [])
 
   useEffect(() => {
+    api.getWishlist(currentUser?.id).then((items) => {
+      const top = items
+        .filter((i) => i.status === 'offen' && i.like_count > 0)
+        .sort((a, b) => b.like_count - a.like_count)
+        .slice(0, 3)
+      setTopWishes(top)
+    })
+  }, [currentUser])
+
+  useEffect(() => {
     if (!bezahltVon && currentUser) setBezahltVon(currentUser.id)
   }, [currentUser, bezahltVon])
+
+  function pickWish(item: WishlistItem) {
+    setCreatingNew(true)
+    setNewName(item.name)
+    setNewOrt(item.ort ?? '')
+    setNewKueche(item.kueche ?? '')
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
@@ -71,6 +89,19 @@ export default function NewVisit() {
       </div>
 
       <form className="form" onSubmit={handleSubmit}>
+        {topWishes.length > 0 && (
+          <div className="field">
+            <span className="field__label">Top-Wünsche</span>
+            <div className="chip-row" style={{ padding: 0 }}>
+              {topWishes.map((w) => (
+                <button type="button" key={w.id} className="chip" onClick={() => pickWish(w)}>
+                  {w.name} <span style={{ opacity: 0.7 }}>♥{w.like_count}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         <div className="field">
           <span className="field__label">Restaurant</span>
           {!creatingNew ? (

@@ -49,6 +49,8 @@ export interface WishlistItem {
   created_at: string
   vorgeschlagen_von: string
   vorgeschlagen_von_name: string
+  like_count: number
+  liked_by_me: boolean
 }
 
 export interface PaymentStatsUser {

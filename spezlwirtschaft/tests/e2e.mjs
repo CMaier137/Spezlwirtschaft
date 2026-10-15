@@ -130,6 +130,10 @@ async function main() {
     cwd: ROOT,
     stdio: 'pipe'
   })
+  execSync('npx wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0002_wishlist_likes.sql', {
+    cwd: ROOT,
+    stdio: 'pipe'
+  })
 
   server = spawn('npx', ['wrangler', 'pages', 'dev', 'dist', '--port', String(PORT)], {
     cwd: ROOT,
@@ -375,6 +379,63 @@ async function main() {
   await testAsync('WISH-04', 'Ungültiger Status wird abgelehnt (400)', async () => {
     const { status } = await api('PATCH', `/api/wishlist/${wishId}`, { status: 'quatsch' })
     assertEqual(status, 400)
+  })
+
+  console.log('\n📍 LIKE "I like" auf der Wunschliste')
+
+  let likeWishId
+  await testAsync('LIKE-01', 'Eigenen Wunsch für die Like-Tests anlegen', async () => {
+    const { data } = await api('POST', '/api/wishlist', {
+      vorgeschlagen_von: users[0].id,
+      name: 'Apollon',
+      ort: 'Schrobenhausen',
+      kueche: 'Grieche'
+    })
+    likeWishId = data.id
+  })
+
+  await testAsync('LIKE-02', 'Frischer Wunsch hat like_count 0 und liked_by_me false', async () => {
+    const { data } = await api('GET', `/api/wishlist?user_id=${users[1].id}`)
+    const item = data.find((w) => w.id === likeWishId)
+    assertEqual(item.like_count, 0)
+    assertEqual(item.liked_by_me, false)
+  })
+
+  await testAsync('LIKE-03', 'Liken erhöht like_count auf 1 und liefert liked:true', async () => {
+    const { status, data } = await api('POST', `/api/wishlist/${likeWishId}/like`, { user_id: users[1].id })
+    assertEqual(status, 200)
+    assertEqual(data.liked, true)
+    assertEqual(data.like_count, 1)
+  })
+
+  await testAsync('LIKE-04', 'Zweiter Nutzer liked denselben Wunsch → like_count 2', async () => {
+    const { data } = await api('POST', `/api/wishlist/${likeWishId}/like`, { user_id: users[2].id })
+    assertEqual(data.liked, true)
+    assertEqual(data.like_count, 2)
+  })
+
+  await testAsync('LIKE-05', 'GET zeigt liked_by_me korrekt pro anfragendem Nutzer', async () => {
+    const asLiker = await api('GET', `/api/wishlist?user_id=${users[1].id}`)
+    const asNonLiker = await api('GET', `/api/wishlist?user_id=${users[0].id}`)
+    assertEqual(asLiker.data.find((w) => w.id === likeWishId).liked_by_me, true)
+    assertEqual(asNonLiker.data.find((w) => w.id === likeWishId).liked_by_me, false)
+    assertEqual(asNonLiker.data.find((w) => w.id === likeWishId).like_count, 2, 'like_count ist unabhängig vom anfragenden Nutzer')
+  })
+
+  await testAsync('LIKE-06', 'Erneutes Liken desselben Nutzers nimmt den Like wieder zurück (Toggle)', async () => {
+    const { data } = await api('POST', `/api/wishlist/${likeWishId}/like`, { user_id: users[1].id })
+    assertEqual(data.liked, false)
+    assertEqual(data.like_count, 1, 'nur noch der Like von Nutzer 2 sollte übrig sein')
+  })
+
+  await testAsync('LIKE-07', 'Like ohne user_id wird abgelehnt (400)', async () => {
+    const { status } = await api('POST', `/api/wishlist/${likeWishId}/like`, {})
+    assertEqual(status, 400)
+  })
+
+  await testAsync('LIKE-08', 'Like für unbekannten Wunsch liefert 404', async () => {
+    const { status } = await api('POST', '/api/wishlist/does-not-exist/like', { user_id: users[0].id })
+    assertEqual(status, 404)
   })
 
   console.log('\n📍 PAY Zahlungsstatistik')
