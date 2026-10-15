@@ -83,7 +83,12 @@ export default function NewVisit() {
                   </option>
                 ))}
               </select>
-              <button type="button" className="text-link" onClick={() => setCreatingNew(true)} style={{ marginTop: 8 }}>
+              <button
+                type="button"
+                className="text-link text-link--cta"
+                onClick={() => setCreatingNew(true)}
+                style={{ marginTop: 8 }}
+              >
                 + Neues Restaurant anlegen
               </button>
             </>
