@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { UserProvider, useUser } from './context/UserContext'
 import Login from './pages/Login'
+import Home from './pages/Home'
 import Ranking from './pages/Ranking'
 import RestaurantDetail from './pages/RestaurantDetail'
 import NewVisit from './pages/NewVisit'
@@ -22,7 +23,8 @@ export default function App() {
       <BrowserRouter>
         <Gate>
           <Routes>
-            <Route path="/" element={<Ranking />} />
+            <Route path="/" element={<Home />} />
+            <Route path="/rangliste" element={<Ranking />} />
             <Route path="/restaurants/:id" element={<RestaurantDetail />} />
             <Route path="/besuch/neu" element={<NewVisit />} />
             <Route path="/besuch/:visitId/bewerten" element={<Rating />} />

@@ -7,6 +7,10 @@ export default function BottomNav() {
   return (
     <nav className="bottom-nav">
       <NavLink to="/" end className={itemClass}>
+        <HomeIcon />
+        <span>Home</span>
+      </NavLink>
+      <NavLink to="/rangliste" className={itemClass}>
         <BarsIcon />
         <span>Rangliste</span>
       </NavLink>
@@ -23,6 +27,15 @@ export default function BottomNav() {
         <span>Zahlungen</span>
       </NavLink>
     </nav>
+  )
+}
+
+function HomeIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 11l9-7 9 7" />
+      <path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9" />
+    </svg>
   )
 }
 

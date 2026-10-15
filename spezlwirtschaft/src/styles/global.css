@@ -468,6 +468,39 @@ textarea { resize: vertical; }
 .payment-card__top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
 .payment-card__sum { font-family: var(--font-display); font-size: 20px; color: var(--accent-dark); margin-left: auto; }
 
+/* Home-Area: Begrüßung, bayrischer Spruch, Bierdeckel, User-Switch, Shortcuts */
+.home-greeting { padding: 18px 20px 4px; text-align: center; }
+.home-greeting__hey { font-family: var(--font-display); font-size: 30px; color: var(--accent-light); }
+.home-spruch {
+  margin: 6px 20px 18px; padding: 12px 18px;
+  border: 1.5px dashed var(--border-dashed); border-radius: 14px;
+  font-family: var(--font-display); font-size: 16px; color: var(--text);
+  text-align: center; font-style: italic;
+}
+
+.coaster-stage { display: flex; justify-content: center; padding: 6px 0 22px; }
+.coaster-wrap { width: 190px; height: 190px; filter: drop-shadow(0 14px 18px rgba(0, 0, 0, 0.55)); }
+
+.user-switch { margin: 0 20px 22px; }
+.user-switch__label { font-size: 12px; color: var(--text-faint); text-align: center; margin-bottom: 10px; }
+.user-switch__row { display: flex; justify-content: center; gap: 14px; }
+.user-chip {
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--text-muted); font-size: 12px;
+  padding: 4px; opacity: 0.7;
+}
+.user-chip .avatar { width: 44px; height: 44px; font-size: 21px; border: 2px solid transparent; }
+.user-chip--active { opacity: 1; color: var(--accent-light); font-weight: 700; }
+.user-chip--active .avatar { border-color: var(--accent-light); box-shadow: 0 0 0 3px rgba(230, 194, 122, 0.18); }
+
+.home-shortcuts { display: flex; gap: 10px; margin: 0 20px 20px; }
+.home-shortcut {
+  flex: 1; padding: 14px 10px; text-align: center;
+  border: 1.5px solid var(--border-dashed); border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18); color: var(--text-muted); font-size: 12px; font-weight: 600;
+}
+.home-shortcut__n { display: block; font-family: var(--font-display); font-size: 22px; color: var(--accent-light); margin-bottom: 2px; }
+
 .bottom-nav {
   position: sticky;
   bottom: 0;
