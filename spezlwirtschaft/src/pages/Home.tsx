@@ -113,9 +113,9 @@ export default function Home() {
         <Link to="/rangliste" className="home-shortcut">
           <span className="home-shortcut__n">{pendingCount ?? '—'}</span>offen zu bewerten
         </Link>
-        <div className="home-shortcut">
+        <Link to="/wunschliste" className="home-shortcut">
           <span className="home-shortcut__n">{wishlistCount ?? '—'}</span>auf der Wunschliste
-        </div>
+        </Link>
       </div>
 
       <BottomNav />

@@ -36,6 +36,13 @@ export const api = {
 
   getVisit: (id: string) => request<VisitDetail>(`/visits/${id}`),
 
+  updateVisit: (
+    id: string,
+    data: { datum?: string; uhrzeit?: string | null; betrag?: number | null; bezahlt_von?: string | null }
+  ) => request<{ id: string; is_future: boolean }>(`/visits/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
+
+  deleteVisit: (id: string) => request<null>(`/visits/${id}`, { method: 'DELETE' }),
+
   uploadVisitPhoto: async (visitId: string, userId: string, file: File) => {
     const form = new FormData()
     form.append('photo', file)

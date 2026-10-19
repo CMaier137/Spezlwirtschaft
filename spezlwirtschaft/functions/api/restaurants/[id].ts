@@ -19,7 +19,7 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, params }) => {
   if (!restaurant) return notFound('Restaurant nicht gefunden')
 
   const { results: visits } = await env.DB.prepare(
-    `SELECT v.id, v.datum, v.uhrzeit, v.betrag, u.name AS bezahlt_von_name
+    `SELECT v.id, v.datum, v.uhrzeit, v.betrag, v.bezahlt_von, u.name AS bezahlt_von_name
      FROM visits v
      LEFT JOIN users u ON u.id = v.bezahlt_von
      WHERE v.restaurant_id = ?1

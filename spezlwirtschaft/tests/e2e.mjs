@@ -317,6 +317,34 @@ async function main() {
     assertEqual(own[0].essen, 1)
   })
 
+  await testAsync('RANK-01', 'Rangliste zeigt Bewertungs-Fortschritt des jüngsten (vergangenen) Besuchs', async () => {
+    const { data } = await api('GET', '/api/restaurants?sort=overall&kueche=Alle')
+    const r = data.find((x) => x.id === restaurantId)
+    assertEqual(r.latest_visit_id, visitId)
+    assertEqual(r.latest_visit_rated_count, 2, '2 von 3 Nutzern haben diesen Besuch bewertet')
+  })
+
+  let rankOnlyFutureRestaurantId
+  await testAsync('RANK-02', 'Restaurant mit nur einer zukünftigen Reservierung hat keinen Bewertungs-Fortschritt', async () => {
+    const created = await api('POST', '/api/restaurants', {
+      name: 'Nur-Reservierung-GmbH',
+      created_by: users[0].id
+    })
+    rankOnlyFutureRestaurantId = created.data.id
+    await api('POST', '/api/visits', {
+      restaurant_id: rankOnlyFutureRestaurantId,
+      datum: '2099-06-15',
+      uhrzeit: '20:00',
+      betrag: null,
+      bezahlt_von: null
+    })
+    const { data } = await api('GET', '/api/restaurants?sort=overall&kueche=Alle')
+    const r = data.find((x) => x.id === rankOnlyFutureRestaurantId)
+    assert(!!r, 'Restaurant nicht in der Liste gefunden')
+    assertEqual(r.latest_visit_id, null)
+    assertEqual(r.latest_visit_rated_count, null)
+  })
+
   console.log('\n📍 SORT Sortierung & Filter')
 
   let restaurant2Id
@@ -496,6 +524,141 @@ async function main() {
     assertEqual(del.status, 204)
     const res = await fetch(`${BASE}/api/photos/${photoId}`)
     assertEqual(res.status, 404)
+  })
+
+  console.log('\n📍 VEDIT Besuch bearbeiten/löschen (PATCH & DELETE /api/visits/:id)')
+
+  let vEditVisitId
+  await testAsync('VEDIT-01', 'Besuch für die Bearbeiten-Tests anlegen (zunächst in der Zukunft)', async () => {
+    const { status, data } = await api('POST', '/api/visits', {
+      restaurant_id: restaurantId,
+      datum: '2099-03-01',
+      uhrzeit: '18:00',
+      betrag: null,
+      bezahlt_von: null
+    })
+    assertEqual(status, 201)
+    assertEqual(data.is_future, true)
+    vEditVisitId = data.id
+  })
+
+  await testAsync('VEDIT-02', 'PATCH kann nur die Uhrzeit einer Reservierung ändern', async () => {
+    const { status, data } = await api('PATCH', `/api/visits/${vEditVisitId}`, { uhrzeit: '21:15' })
+    assertEqual(status, 200)
+    assertEqual(data.is_future, true)
+    const check = await api('GET', `/api/visits/${vEditVisitId}`)
+    assertEqual(check.data.uhrzeit, '21:15')
+    assertEqual(check.data.datum, '2099-03-01', 'Datum darf sich nicht verändert haben')
+  })
+
+  await testAsync('VEDIT-03', 'PATCH mit ungültiger Uhrzeit wird abgelehnt (400)', async () => {
+    // "25:99" erfüllt formal \d{2}:\d{2} (die Backend-Validierung prüft
+    // bewusst nur das Format, keine Wertebereiche — wie überall sonst in der
+    // App) und würde also NICHT abgelehnt. Hier testen wir daher ein Format,
+    // das die Regex tatsächlich nicht erfüllt (einstellige Minute).
+    const { status } = await api('PATCH', `/api/visits/${vEditVisitId}`, { uhrzeit: '19:3' })
+    assertEqual(status, 400)
+  })
+
+  await testAsync('VEDIT-04', 'PATCH für unbekannten Besuch liefert 404', async () => {
+    const { status } = await api('PATCH', '/api/visits/does-not-exist', { uhrzeit: '12:00' })
+    assertEqual(status, 404)
+  })
+
+  await testAsync(
+    'VEDIT-05',
+    'PATCH mit Datum in der Vergangenheit + Betrag/Zahler:in setzt is_future:false und speichert beide Felder',
+    async () => {
+      const { status, data } = await api('PATCH', `/api/visits/${vEditVisitId}`, {
+        datum: '2020-05-01',
+        uhrzeit: null,
+        betrag: 77.5,
+        bezahlt_von: users[2].id
+      })
+      assertEqual(status, 200)
+      assertEqual(data.is_future, false)
+
+      const check = await api('GET', `/api/visits/${vEditVisitId}`)
+      assertEqual(check.data.is_future, false)
+      assertEqual(check.data.datum, '2020-05-01')
+      // Betrag/bezahlt_von werden von GET /api/visits/:id nicht mitgeliefert
+      // (reine Bewertungsseite) — geprüft wird das in VEDIT-06 über
+      // GET /api/restaurants/:id.
+    }
+  )
+
+  await testAsync(
+    'VEDIT-06',
+    'GET /api/restaurants/:id liefert nach dem Nachtrag die rohe bezahlt_von-id des Besuchs',
+    async () => {
+      const { data } = await api('GET', `/api/restaurants/${restaurantId}`)
+      const v = data.visits.find((x) => x.id === vEditVisitId)
+      assert(!!v, 'Besuch nicht in der Besuchsliste gefunden')
+      assertEqual(v.bezahlt_von, users[2].id)
+      assertEqual(v.betrag, 77.5)
+      assertEqual(v.is_future, false)
+    }
+  )
+
+  await testAsync(
+    'VEDIT-07',
+    'Nach Verschieben ins Vergangene kann der Besuch jetzt bewertet werden (201 statt 400)',
+    async () => {
+      const { status } = await api('POST', '/api/ratings', {
+        visit_id: vEditVisitId,
+        user_id: users[0].id,
+        essen: 4,
+        service: 4,
+        ambiente: 4,
+        preis_leistung: 4
+      })
+      assertEqual(status, 201)
+    }
+  )
+
+  // Aufräumen (kein eigener Testfall): dieser Besuch hat über VEDIT-05 einen
+  // bezahlt_von-Eintrag für users[2] erzeugt, der sonst die spätere
+  // PAY-Teststrecke verfälschen würde (die erwartet, dass users[2] im
+  // gesamten Testlauf noch nie bezahlt hat). Der Besuch selbst wurde über
+  // VEDIT-02–07 bereits vollständig getestet.
+  await api('DELETE', `/api/visits/${vEditVisitId}`)
+
+  let vDeleteVisitId, vDeletePhotoId
+  await testAsync('VEDIT-08', 'Besuch mit Foto für den Löschen-Test anlegen', async () => {
+    const { data } = await api('POST', '/api/visits', {
+      restaurant_id: restaurantId,
+      datum: '2099-04-01',
+      uhrzeit: '19:00',
+      betrag: null,
+      bezahlt_von: null
+    })
+    vDeleteVisitId = data.id
+
+    const form = new FormData()
+    form.append('photo', testImageFile())
+    form.append('uploaded_by', users[0].id)
+    const upload = await apiUpload(`/api/visits/${vDeleteVisitId}/photos`, form)
+    vDeletePhotoId = upload.data.id
+  })
+
+  await testAsync(
+    'VEDIT-09',
+    'DELETE /api/visits/:id löscht den Besuch inkl. Foto (Kaskade) — danach 404 auf beiden',
+    async () => {
+      const del = await api('DELETE', `/api/visits/${vDeleteVisitId}`)
+      assertEqual(del.status, 204)
+
+      const visitCheck = await api('GET', `/api/visits/${vDeleteVisitId}`)
+      assertEqual(visitCheck.status, 404)
+
+      const photoCheck = await fetch(`${BASE}/api/photos/${vDeletePhotoId}`)
+      assertEqual(photoCheck.status, 404, 'R2-Objekt des Fotos muss mit gelöscht worden sein')
+    }
+  )
+
+  await testAsync('VEDIT-10', 'DELETE für unbekannten Besuch liefert 404', async () => {
+    const { status } = await api('DELETE', '/api/visits/does-not-exist')
+    assertEqual(status, 404)
   })
 
   console.log('\n📍 WISH Wunschliste')

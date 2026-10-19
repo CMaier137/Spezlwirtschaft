@@ -215,6 +215,12 @@ button { cursor: pointer; }
 .row-card__title { font-size: 16px; font-weight: 600; font-family: var(--font-display); color: var(--text-ink); }
 .row-card__meta { font-size: 12px; color: var(--text-muted-ink); }
 
+/* Bewertungs-Fortschritt des jüngsten (vergangenen) Besuchs in der Rangliste,
+   z. B. "2/3 bewertet". Erst eingefärbt, sobald alle bewertet haben — gleiche
+   Logik wie "solide = erledigt" an anderer Stelle. */
+.rating-progress { margin-top: 2px; font-size: 11px; font-weight: 700; color: var(--text-muted-ink); }
+.rating-progress--done { color: var(--accent-light); }
+
 .rank-badge {
   width: 28px; height: 28px;
   border-radius: 50%;
@@ -293,7 +299,6 @@ button { cursor: pointer; }
    gedacht und wirkt innerhalb einer hellen Karte zu blass/unscheinbar). */
 .rate-cta {
   display: inline-block;
-  margin-top: 8px;
   padding: 6px 14px;
   border-radius: 20px;
   border: 1.5px solid var(--border-strong);
@@ -449,7 +454,6 @@ textarea { resize: vertical; }
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  margin-top: 8px;
   padding: 6px 14px;
   border-radius: 20px;
   border: 1.5px dashed var(--accent-light);
@@ -489,19 +493,36 @@ textarea { resize: vertical; }
 }
 .photo-add-btn {
   flex-shrink: 0;
-  width: 64px;
   height: 64px;
+  padding: 0 14px;
   border-radius: 10px;
   border: 2px dashed var(--border-dashed);
   background: none;
   color: var(--accent-light);
-  font-size: 22px;
+  font-size: 12px;
   font-weight: 700;
+  white-space: nowrap;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .photo-add-btn:active { border-color: var(--accent); background: rgba(207, 159, 63, 0.1); }
+
+/* Bearbeiten/Löschen einer Besuchskarte */
+.visit-card__actions { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.visit-icon-btn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: none; background: var(--track); color: var(--text-muted-ink);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1; flex-shrink: 0;
+}
+.visit-icon-btn:active { background: var(--border-dashed); color: var(--text); transform: scale(0.92); }
+
+.visit-edit-form { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+.visit-edit-form__row { display: flex; gap: 8px; }
+.visit-edit-form__row input { flex: 1; }
+.visit-edit-form__actions { display: flex; justify-content: space-between; align-items: center; margin-top: 2px; }
 
 .remove-btn {
   /* 36px sichtbar, aber mit negativem Margin auf ~44px Tap-Fläche erweitert, ohne optisch zu dominieren */

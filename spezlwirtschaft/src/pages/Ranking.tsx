@@ -14,7 +14,7 @@ const SORT_OPTIONS = [
 ]
 
 export default function Ranking() {
-  const { currentUser } = useUser()
+  const { currentUser, users } = useUser()
   const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([])
   const [sort, setSort] = useState('overall')
   const [kueche, setKueche] = useState('Alle')
@@ -78,6 +78,15 @@ export default function Ranking() {
                 <div className="row-card__meta">
                   {r.kueche ?? '—'} · {r.visit_count} {r.visit_count === 1 ? 'Besuch' : 'Besuche'}
                 </div>
+                {r.latest_visit_id && (
+                  <div
+                    className={`rating-progress ${
+                      r.latest_visit_rated_count === users.length ? 'rating-progress--done' : ''
+                    }`}
+                  >
+                    {r.latest_visit_rated_count}/{users.length} bewertet
+                  </div>
+                )}
               </div>
               <div className="score">{score != null ? score.toFixed(1) : '—'}</div>
             </Link>

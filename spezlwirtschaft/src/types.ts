@@ -14,6 +14,8 @@ export interface RestaurantSummary {
   avg_service: number | null
   avg_ambiente: number | null
   avg_preis_leistung: number | null
+  latest_visit_id: string | null
+  latest_visit_rated_count: number | null
 }
 
 export interface VisitRating {
@@ -38,6 +40,7 @@ export interface RestaurantVisit {
   datum: string
   uhrzeit: string | null
   betrag: number | null
+  bezahlt_von: string | null
   bezahlt_von_name: string | null
   avg: number | null
   ratings: VisitRating[]

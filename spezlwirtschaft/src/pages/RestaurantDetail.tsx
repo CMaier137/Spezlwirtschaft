@@ -3,7 +3,8 @@ import { Link, useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import BottomNav from '../components/BottomNav'
 import { useUser } from '../context/UserContext'
-import type { RestaurantDetail as RestaurantDetailType } from '../types'
+import { isFutureVisit } from '../utils/visitTime'
+import type { RestaurantDetail as RestaurantDetailType, RestaurantVisit } from '../types'
 
 const CATEGORIES = [
   { key: 'avg_essen', label: 'Essen' },
@@ -15,10 +16,18 @@ const CATEGORIES = [
 export default function RestaurantDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { currentUser } = useUser()
+  const { currentUser, users } = useUser()
   const [data, setData] = useState<RestaurantDetailType | null>(null)
   const [uploadingVisitId, setUploadingVisitId] = useState<string | null>(null)
   const [photoError, setPhotoError] = useState<string | null>(null)
+
+  const [editingVisitId, setEditingVisitId] = useState<string | null>(null)
+  const [editDatum, setEditDatum] = useState('')
+  const [editUhrzeit, setEditUhrzeit] = useState('')
+  const [editBetrag, setEditBetrag] = useState('')
+  const [editBezahltVon, setEditBezahltVon] = useState('')
+  const [editError, setEditError] = useState<string | null>(null)
+  const [editSaving, setEditSaving] = useState(false)
 
   function reload() {
     if (id) api.getRestaurant(id).then(setData)
@@ -43,6 +52,47 @@ export default function RestaurantDetail() {
 
   async function handleDeletePhoto(photoId: string) {
     await api.deleteVisitPhoto(photoId)
+    reload()
+  }
+
+  function startEdit(v: RestaurantVisit) {
+    setEditError(null)
+    setEditingVisitId(v.id)
+    setEditDatum(v.datum)
+    setEditUhrzeit(v.uhrzeit ?? '')
+    setEditBetrag(v.betrag != null ? String(v.betrag) : '')
+    setEditBezahltVon(v.bezahlt_von ?? '')
+  }
+
+  async function handleEditSave(visitId: string) {
+    setEditError(null)
+    if (editUhrzeit && !/^\d{2}:\d{2}$/.test(editUhrzeit)) {
+      setEditError('Ungültige Uhrzeit (HH:MM).')
+      return
+    }
+    const stillFuture = isFutureVisit(editDatum, editUhrzeit || null)
+    setEditSaving(true)
+    try {
+      await api.updateVisit(visitId, {
+        datum: editDatum,
+        uhrzeit: editUhrzeit || null,
+        // Solange der Besuch (noch) in der Zukunft liegt, lassen wir Betrag/
+        // Zahler:in unangetastet (nicht mitsenden) statt sie zu überschreiben —
+        // es gibt ja noch keine Rechnung.
+        ...(stillFuture ? {} : { betrag: editBetrag ? Number(editBetrag) : null, bezahlt_von: editBezahltVon || null })
+      })
+      setEditingVisitId(null)
+      reload()
+    } catch (err) {
+      setEditError(err instanceof Error ? err.message : 'Speichern fehlgeschlagen.')
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  async function handleDeleteVisit(visitId: string) {
+    if (!window.confirm('Diese Reservierung wirklich löschen?')) return
+    await api.deleteVisit(visitId)
     reload()
   }
 
@@ -136,12 +186,11 @@ export default function RestaurantDetail() {
                     </button>
                   </div>
                 ))}
-                <label className="photo-add-btn" aria-label="Foto hochladen">
-                  {uploadingVisitId === v.id ? '…' : '+'}
+                <label className="photo-add-btn">
+                  {uploadingVisitId === v.id ? '…' : '+ Buidl vo meim Essen'}
                   <input
                     type="file"
                     accept="image/*"
-                    capture="environment"
                     style={{ display: 'none' }}
                     disabled={uploadingVisitId === v.id}
                     onChange={(e) => handlePhotoSelect(v.id, e)}
@@ -149,16 +198,83 @@ export default function RestaurantDetail() {
                 </label>
               </div>
 
-              {v.is_future ? (
-                <div className="reservation-pill">📅 Reserviert{v.uhrzeit ? ` für ${v.uhrzeit} Uhr` : ''}</div>
-              ) : ownRating ? (
-                <Link to={`/besuch/${v.id}/bewerten`} className="rate-cta rate-cta--done">
-                  Deine Bewertung bearbeiten →
-                </Link>
+              {editingVisitId === v.id ? (
+                <div className="visit-edit-form">
+                  <div className="visit-edit-form__row">
+                    <input type="date" value={editDatum} onChange={(e) => setEditDatum(e.target.value)} />
+                    <input type="time" value={editUhrzeit} onChange={(e) => setEditUhrzeit(e.target.value)} />
+                  </div>
+                  {!isFutureVisit(editDatum, editUhrzeit || null) && (
+                    <>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="Gesamtrechnung (€)"
+                        value={editBetrag}
+                        onChange={(e) => setEditBetrag(e.target.value)}
+                      />
+                      <div className="pill-select">
+                        {users.map((u) => (
+                          <button
+                            type="button"
+                            key={u.id}
+                            className={`pill-select__option ${editBezahltVon === u.id ? 'pill-select__option--active' : ''}`}
+                            onClick={() => setEditBezahltVon(u.id)}
+                          >
+                            {u.name}
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {editError && <div className="error">{editError}</div>}
+                  <div className="visit-edit-form__actions">
+                    <button type="button" className="text-link" onClick={() => setEditingVisitId(null)}>
+                      Abbrechen
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--primary"
+                      disabled={editSaving}
+                      onClick={() => handleEditSave(v.id)}
+                    >
+                      {editSaving ? 'Speichert …' : 'Speichern'}
+                    </button>
+                  </div>
+                </div>
               ) : (
-                <Link to={`/besuch/${v.id}/bewerten`} className="rate-cta">
-                  Jetzt bewerten →
-                </Link>
+                <div className="visit-card__actions">
+                  {v.is_future ? (
+                    <div className="reservation-pill">📅 Reserviert{v.uhrzeit ? ` für ${v.uhrzeit} Uhr` : ''}</div>
+                  ) : ownRating ? (
+                    <Link to={`/besuch/${v.id}/bewerten`} className="rate-cta rate-cta--done">
+                      Deine Bewertung bearbeiten →
+                    </Link>
+                  ) : (
+                    <Link to={`/besuch/${v.id}/bewerten`} className="rate-cta">
+                      Jetzt bewerten →
+                    </Link>
+                  )}
+                  <button
+                    type="button"
+                    className="visit-icon-btn"
+                    aria-label="Besuch bearbeiten"
+                    onClick={() => startEdit(v)}
+                  >
+                    ✎
+                  </button>
+                  {v.is_future && (
+                    <button
+                      type="button"
+                      className="visit-icon-btn"
+                      aria-label="Reservierung löschen"
+                      onClick={() => handleDeleteVisit(v.id)}
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           )

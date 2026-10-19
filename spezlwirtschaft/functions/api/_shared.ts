@@ -73,7 +73,9 @@ export const RANKING_QUERY = `
     AVG(va.essen) AS avg_essen,
     AVG(va.service) AS avg_service,
     AVG(va.ambiente) AS avg_ambiente,
-    AVG(va.preis_leistung) AS avg_preis_leistung
+    AVG(va.preis_leistung) AS avg_preis_leistung,
+    lv.id AS latest_visit_id,
+    lv.rated_count AS latest_visit_rated_count
   FROM restaurants r
   LEFT JOIN (
     SELECT
@@ -88,5 +90,23 @@ export const RANKING_QUERY = `
     JOIN ratings rt ON rt.visit_id = v.id
     GROUP BY v.id
   ) va ON va.restaurant_id = r.id
+  LEFT JOIN (
+    -- Jeweils nur der jüngste VERGANGENE Besuch pro Restaurant (aktive
+    -- Reservierungen in der Zukunft zählen bewusst nicht mit — die können ja
+    -- noch gar nicht bewertet sein). Grobe Prüfung über das Datum allein
+    -- (ohne Uhrzeit) reicht für diese Übersicht.
+    SELECT
+      v.id,
+      v.restaurant_id,
+      (SELECT COUNT(*) FROM ratings rt WHERE rt.visit_id = v.id) AS rated_count
+    FROM visits v
+    WHERE v.datum <= date('now')
+      AND v.id = (
+        SELECT v2.id FROM visits v2
+        WHERE v2.restaurant_id = v.restaurant_id AND v2.datum <= date('now')
+        ORDER BY v2.datum DESC, v2.created_at DESC
+        LIMIT 1
+      )
+  ) lv ON lv.restaurant_id = r.id
   GROUP BY r.id
 `

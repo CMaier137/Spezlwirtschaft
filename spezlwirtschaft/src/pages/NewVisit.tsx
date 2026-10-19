@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import BottomNav from '../components/BottomNav'
+import { isFutureVisit } from '../utils/visitTime'
 import type { RestaurantSummary, WishlistItem } from '../types'
 
 export default function NewVisit() {
@@ -40,6 +41,8 @@ export default function NewVisit() {
     if (!bezahltVon && currentUser) setBezahltVon(currentUser.id)
   }, [currentUser, bezahltVon])
 
+  const willBeFuture = isFutureVisit(datum, uhrzeit || null)
+
   function pickWish(item: WishlistItem) {
     setCreatingNew(true)
     setNewName(item.name)
@@ -69,8 +72,8 @@ export default function NewVisit() {
         restaurant_id: rId,
         datum,
         uhrzeit: uhrzeit || null,
-        betrag: betrag ? Number(betrag) : null,
-        bezahlt_von: bezahltVon || null
+        betrag: willBeFuture ? null : betrag ? Number(betrag) : null,
+        bezahlt_von: willBeFuture ? null : bezahltVon || null
       })
       if (visit.is_future) {
         navigate(`/restaurants/${rId}`)
@@ -159,38 +162,47 @@ export default function NewVisit() {
           erst danach.
         </p>
 
-        <label className="field">
-          <span className="field__label">Gesamtrechnung (€)</span>
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            placeholder="132.50"
-            value={betrag}
-            onChange={(e) => setBetrag(e.target.value)}
-          />
-        </label>
+        {willBeFuture ? (
+          <p className="hint">
+            Rechnungsbetrag und Zahler:in trägst du nach dem Termin ein — über das Bearbeiten-Symbol (✎) bei der
+            Reservierung.
+          </p>
+        ) : (
+          <>
+            <label className="field">
+              <span className="field__label">Gesamtrechnung (€)</span>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="132.50"
+                value={betrag}
+                onChange={(e) => setBetrag(e.target.value)}
+              />
+            </label>
 
-        <div className="field">
-          <span className="field__label">Bezahlt von</span>
-          <div className="pill-select">
-            {users.map((u) => (
-              <button
-                type="button"
-                key={u.id}
-                className={`pill-select__option ${bezahltVon === u.id ? 'pill-select__option--active' : ''}`}
-                onClick={() => setBezahltVon(u.id)}
-              >
-                {u.name}
-              </button>
-            ))}
-          </div>
-        </div>
+            <div className="field">
+              <span className="field__label">Bezahlt von</span>
+              <div className="pill-select">
+                {users.map((u) => (
+                  <button
+                    type="button"
+                    key={u.id}
+                    className={`pill-select__option ${bezahltVon === u.id ? 'pill-select__option--active' : ''}`}
+                    onClick={() => setBezahltVon(u.id)}
+                  >
+                    {u.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         {error && <div className="error">{error}</div>}
 
         <button type="submit" className="btn btn--primary" disabled={submitting}>
-          {submitting ? 'Speichert …' : 'Bewertung starten →'}
+          {submitting ? 'Speichert …' : willBeFuture ? 'Reservierung anlegen →' : 'Bewertung starten →'}
         </button>
       </form>
 
