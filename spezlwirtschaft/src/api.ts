@@ -26,10 +26,35 @@ export const api = {
   createRestaurant: (data: { name: string; ort?: string; kueche?: string; created_by?: string }) =>
     request<{ id: string }>('/restaurants', { method: 'POST', body: JSON.stringify(data) }),
 
-  createVisit: (data: { restaurant_id: string; datum: string; betrag: number | null; bezahlt_von: string | null }) =>
-    request<{ id: string }>('/visits', { method: 'POST', body: JSON.stringify(data) }),
+  createVisit: (data: {
+    restaurant_id: string
+    datum: string
+    uhrzeit?: string | null
+    betrag: number | null
+    bezahlt_von: string | null
+  }) => request<{ id: string; is_future: boolean }>('/visits', { method: 'POST', body: JSON.stringify(data) }),
 
   getVisit: (id: string) => request<VisitDetail>(`/visits/${id}`),
+
+  uploadVisitPhoto: async (visitId: string, userId: string, file: File) => {
+    const form = new FormData()
+    form.append('photo', file)
+    form.append('uploaded_by', userId)
+    const res = await fetch(`${API_BASE}/visits/${visitId}/photos`, { method: 'POST', body: form })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.error || `Foto-Upload fehlgeschlagen (${res.status})`)
+    }
+    return res.json() as Promise<{ id: string; url: string }>
+  },
+
+  deleteVisitPhoto: async (photoId: string) => {
+    const res = await fetch(`${API_BASE}/photos/${photoId}`, { method: 'DELETE' })
+    if (res.status !== 204) {
+      const body = await res.json().catch(() => ({}))
+      throw new Error(body.error || `Löschen fehlgeschlagen (${res.status})`)
+    }
+  },
 
   submitRating: (data: {
     visit_id?: string

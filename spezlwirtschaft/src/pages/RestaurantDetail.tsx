@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, type ChangeEvent } from 'react'
 import { Link, useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import BottomNav from '../components/BottomNav'
@@ -17,10 +17,34 @@ export default function RestaurantDetail() {
   const navigate = useNavigate()
   const { currentUser } = useUser()
   const [data, setData] = useState<RestaurantDetailType | null>(null)
+  const [uploadingVisitId, setUploadingVisitId] = useState<string | null>(null)
+  const [photoError, setPhotoError] = useState<string | null>(null)
 
-  useEffect(() => {
+  function reload() {
     if (id) api.getRestaurant(id).then(setData)
-  }, [id])
+  }
+  useEffect(reload, [id])
+
+  async function handlePhotoSelect(visitId: string, e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    e.target.value = '' // dieselbe Datei danach erneut auswählbar machen
+    if (!file || !currentUser) return
+    setPhotoError(null)
+    setUploadingVisitId(visitId)
+    try {
+      await api.uploadVisitPhoto(visitId, currentUser.id, file)
+      reload()
+    } catch (err) {
+      setPhotoError(err instanceof Error ? err.message : 'Foto-Upload fehlgeschlagen.')
+    } finally {
+      setUploadingVisitId(null)
+    }
+  }
+
+  async function handleDeletePhoto(photoId: string) {
+    await api.deleteVisitPhoto(photoId)
+    reload()
+  }
 
   if (!data) {
     return (
@@ -71,14 +95,18 @@ export default function RestaurantDetail() {
       </div>
 
       <div className="section-title">Besuche</div>
+      {photoError && <div className="error" style={{ margin: '0 20px 12px' }}>{photoError}</div>}
       <div className="list">
         {data.visits.length === 0 && <div className="hint">Noch keine Besuche erfasst.</div>}
         {data.visits.map((v) => {
           const ownRating = v.ratings.find((r) => r.user_name === currentUser?.name)
           return (
-            <Link to={`/besuch/${v.id}/bewerten`} className="card visit-card" key={v.id}>
+            <div className="card visit-card" key={v.id}>
               <div className="visit-card__top">
-                <div className="visit-card__date">{formatDate(v.datum)}</div>
+                <div className="visit-card__date">
+                  {formatDate(v.datum)}
+                  {v.uhrzeit ? ` · ${v.uhrzeit} Uhr` : ''}
+                </div>
                 <div className="hint">
                   {v.avg != null ? `Ø ${v.avg.toFixed(1)}` : 'noch keine Bewertung'}
                   {v.bezahlt_von_name ? ` · bezahlt: ${v.bezahlt_von_name}` : ''}
@@ -91,12 +119,48 @@ export default function RestaurantDetail() {
                     „{r.kommentar}" — {r.user_name}
                   </div>
                 ))}
-              {ownRating ? (
-                <div className="rate-cta rate-cta--done">Deine Bewertung bearbeiten →</div>
+
+              <div className="photo-row">
+                {v.photos.map((p) => (
+                  <div className="photo-thumb" key={p.id}>
+                    <a href={p.url} target="_blank" rel="noreferrer">
+                      <img src={p.url} alt={`Foto von ${p.uploaded_by_name}`} loading="lazy" />
+                    </a>
+                    <button
+                      type="button"
+                      className="photo-thumb__delete"
+                      aria-label="Foto löschen"
+                      onClick={() => handleDeletePhoto(p.id)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+                <label className="photo-add-btn" aria-label="Foto hochladen">
+                  {uploadingVisitId === v.id ? '…' : '+'}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    style={{ display: 'none' }}
+                    disabled={uploadingVisitId === v.id}
+                    onChange={(e) => handlePhotoSelect(v.id, e)}
+                  />
+                </label>
+              </div>
+
+              {v.is_future ? (
+                <div className="reservation-pill">📅 Reserviert{v.uhrzeit ? ` für ${v.uhrzeit} Uhr` : ''}</div>
+              ) : ownRating ? (
+                <Link to={`/besuch/${v.id}/bewerten`} className="rate-cta rate-cta--done">
+                  Deine Bewertung bearbeiten →
+                </Link>
               ) : (
-                <div className="rate-cta">Jetzt bewerten →</div>
+                <Link to={`/besuch/${v.id}/bewerten`} className="rate-cta">
+                  Jetzt bewerten →
+                </Link>
               )}
-            </Link>
+            </div>
           )
         })}
       </div>

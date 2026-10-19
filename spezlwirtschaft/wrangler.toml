@@ -10,3 +10,12 @@ pages_build_output_dir = "dist"
 binding = "DB"
 database_name = "spezlwirtschaft-db"
 database_id = "79226108-29e7-45d3-b89a-1ab17acd2cab"
+
+# R2-Bucket für Essensfotos. Nach dem Anlegen in der Cloudflare-Konsole (R2 >
+# "Create bucket", Name exakt "spezlwirtschaft-photos") muss dieselbe Bindung
+# zusätzlich unter Pages-Projekt > Settings > Functions > R2 bucket bindings
+# gesetzt werden (Binding-Name: PHOTOS). Öffentlicher Zugriff auf den Bucket
+# wird NICHT benötigt — die App streamt Fotos selbst über /api/photos/:id.
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "spezlwirtschaft-photos"

@@ -12,6 +12,10 @@
     "db:migrate:remote": "wrangler d1 execute spezlwirtschaft-db --remote --file=./migrations/0001_init.sql",
     "db:migrate:local:0002": "wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0002_wishlist_likes.sql",
     "db:migrate:remote:0002": "wrangler d1 execute spezlwirtschaft-db --remote --file=./migrations/0002_wishlist_likes.sql",
+    "db:migrate:local:0003": "wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0003_visit_fotos.sql",
+    "db:migrate:remote:0003": "wrangler d1 execute spezlwirtschaft-db --remote --file=./migrations/0003_visit_fotos.sql",
+    "db:migrate:local:0004": "wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0004_visit_reservierung.sql",
+    "db:migrate:remote:0004": "wrangler d1 execute spezlwirtschaft-db --remote --file=./migrations/0004_visit_reservierung.sql",
     "test:e2e": "node tests/e2e.mjs"
   },
   "dependencies": {

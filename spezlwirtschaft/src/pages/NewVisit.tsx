@@ -16,6 +16,7 @@ export default function NewVisit() {
   const [newOrt, setNewOrt] = useState('')
   const [newKueche, setNewKueche] = useState('')
   const [datum, setDatum] = useState(() => new Date().toISOString().slice(0, 10))
+  const [uhrzeit, setUhrzeit] = useState('')
   const [betrag, setBetrag] = useState('')
   const [bezahltVon, setBezahltVon] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -67,10 +68,15 @@ export default function NewVisit() {
       const visit = await api.createVisit({
         restaurant_id: rId,
         datum,
+        uhrzeit: uhrzeit || null,
         betrag: betrag ? Number(betrag) : null,
         bezahlt_von: bezahltVon || null
       })
-      navigate(`/besuch/${visit.id}/bewerten`)
+      if (visit.is_future) {
+        navigate(`/restaurants/${rId}`)
+      } else {
+        navigate(`/besuch/${visit.id}/bewerten`)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Etwas ist schiefgelaufen.')
     } finally {
@@ -143,6 +149,15 @@ export default function NewVisit() {
           <span className="field__label">Datum</span>
           <input type="date" value={datum} onChange={(e) => setDatum(e.target.value)} />
         </label>
+
+        <label className="field">
+          <span className="field__label">Uhrzeit (optional)</span>
+          <input type="time" value={uhrzeit} onChange={(e) => setUhrzeit(e.target.value)} />
+        </label>
+        <p className="hint" style={{ margin: '-8px 0 0' }}>
+          Liegt Datum/Uhrzeit noch in der Zukunft, erscheint der Besuch als Reservierung — bewertet werden kann er
+          erst danach.
+        </p>
 
         <label className="field">
           <span className="field__label">Gesamtrechnung (€)</span>

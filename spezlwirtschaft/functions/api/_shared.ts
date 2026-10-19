@@ -3,6 +3,7 @@
 
 export interface Env {
   DB: D1Database
+  PHOTOS: R2Bucket
 }
 
 export function json(data: unknown, init: ResponseInit = {}): Response {
@@ -34,6 +35,30 @@ const ALLOWED_SORT: Record<string, string> = {
 
 export function sortColumn(sort: string | null): string {
   return ALLOWED_SORT[sort ?? 'overall'] ?? ALLOWED_SORT.overall
+}
+
+// Liegt ein Besuch (Datum + optionale Uhrzeit) noch in der Zukunft?
+// Ohne Uhrzeit gilt der ganze Tag noch als "nicht vergangen" (bis 23:59).
+//
+// Vereinfachung: Datum/Uhrzeit werden als UTC interpretiert statt als
+// tatsächliche lokale Zeit der Nutzer. Für Termine, die Stunden oder Tage im
+// Voraus geplant werden, macht das keinen Unterschied — nur exakt am
+// Umschlagzeitpunkt (±die lokale UTC-Differenz) könnte die Einstufung kurz
+// abweichen. Für eine private 3-Personen-App unproblematisch.
+export function isFutureVisit(datum: string, uhrzeit?: string | null): boolean {
+  const time = uhrzeit && /^\d{2}:\d{2}$/.test(uhrzeit) ? uhrzeit : '23:59'
+  const dt = new Date(`${datum}T${time}:00Z`)
+  if (Number.isNaN(dt.getTime())) return false
+  return dt.getTime() > Date.now()
+}
+
+// Dateiendung passend zum Content-Type eines hochgeladenen Fotos.
+export const PHOTO_EXT: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/heic': 'heic'
 }
 
 // Score-Query: pro Besuch werden zuerst die Kategorie-Durchschnitte über alle

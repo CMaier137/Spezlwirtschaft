@@ -1,12 +1,13 @@
-import { Env, json, notFound } from '../_shared'
+import { Env, json, notFound, isFutureVisit } from '../_shared'
 
-// GET /api/visits/:id — für die Bewertungsseite: Restaurantname, Datum,
-// abgegebene Bewertungen und wer von den 3 Nutzern noch fehlt.
+// GET /api/visits/:id — für die Bewertungsseite: Restaurantname, Datum/Uhrzeit,
+// ob der Besuch noch eine aktive Reservierung (in der Zukunft) ist, abgegebene
+// Bewertungen und wer von den 3 Nutzern noch fehlt.
 export const onRequestGet: PagesFunction<Env> = async ({ env, params }) => {
   const id = params.id as string
 
   const visit = await env.DB.prepare(
-    `SELECT v.id, v.datum, v.restaurant_id, r.name AS restaurant_name
+    `SELECT v.id, v.datum, v.uhrzeit, v.restaurant_id, r.name AS restaurant_name
      FROM visits v JOIN restaurants r ON r.id = v.restaurant_id
      WHERE v.id = ?1`
   ).bind(id).first()
@@ -20,5 +21,10 @@ export const onRequestGet: PagesFunction<Env> = async ({ env, params }) => {
   const submittedIds = new Set((submitted as any[]).map((r) => r.user_id))
   const pending = (allUsers as any[]).filter((u) => !submittedIds.has(u.id))
 
-  return json({ ...visit, ratings: submitted, pending_users: pending })
+  return json({
+    ...visit,
+    is_future: isFutureVisit(visit.datum as string, visit.uhrzeit as string | null),
+    ratings: submitted,
+    pending_users: pending
+  })
 }

@@ -79,6 +79,30 @@ export default function Rating() {
     )
   }
 
+  if (visit.is_future) {
+    return (
+      <div className="page">
+        <div className="topbar">
+          <div className="page-title page-title--sm">{visit.restaurant_name}</div>
+          <div className="hint">
+            {formatDate(visit.datum)}
+            {visit.uhrzeit ? ` · ${visit.uhrzeit} Uhr` : ''} · Reservierung
+          </div>
+        </div>
+        <div className="page-center" style={{ flex: 1, minHeight: 0 }}>
+          <div className="page-title">📅 Reserviert</div>
+          <p className="hint hint--center">
+            Dieser Besuch steht noch an. Bewertung ist erst möglich, sobald der Termin vorbei ist.
+          </p>
+          <button className="btn btn--primary" onClick={() => navigate(`/restaurants/${visit.restaurant_id}`)}>
+            Zum Restaurant
+          </button>
+        </div>
+        <BottomNav />
+      </div>
+    )
+  }
+
   if (done) {
     return (
       <div className="page">

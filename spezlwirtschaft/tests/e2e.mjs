@@ -76,6 +76,27 @@ async function api(method, pathName, body) {
   return { status: res.status, data }
 }
 
+// Für multipart/form-data-Uploads (Fotos) — kein JSON-Body, Boundary setzt
+// fetch automatisch, wenn body eine FormData-Instanz ist.
+async function apiUpload(pathName, formData) {
+  const res = await fetch(`${BASE}${pathName}`, { method: 'POST', body: formData })
+  let data = null
+  try {
+    data = await res.json()
+  } catch {
+    /* kein JSON-Body, ok */
+  }
+  return { status: res.status, data }
+}
+
+// Minimales 1×1-transparentes PNG als Testbild.
+const TEST_PNG_BASE64 =
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+function testImageFile(name = 'test.png', type = 'image/png') {
+  const bytes = Buffer.from(TEST_PNG_BASE64, 'base64')
+  return new File([bytes], name, { type })
+}
+
 let server = null
 function cleanup() {
   if (server && server.pid) {
@@ -131,6 +152,14 @@ async function main() {
     stdio: 'pipe'
   })
   execSync('npx wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0002_wishlist_likes.sql', {
+    cwd: ROOT,
+    stdio: 'pipe'
+  })
+  execSync('npx wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0003_visit_fotos.sql', {
+    cwd: ROOT,
+    stdio: 'pipe'
+  })
+  execSync('npx wrangler d1 execute spezlwirtschaft-db --local --file=./migrations/0004_visit_reservierung.sql', {
     cwd: ROOT,
     stdio: 'pipe'
   })
@@ -344,6 +373,129 @@ async function main() {
   await testAsync('NF-01', 'Unbekanntes Restaurant liefert 404', async () => {
     const { status } = await api('GET', '/api/restaurants/does-not-exist')
     assertEqual(status, 404)
+  })
+
+  console.log('\n📍 RES Reservierung (Besuch in der Zukunft)')
+
+  let futureVisitId
+  await testAsync('RES-01', 'Besuch mit Datum in der Zukunft liefert is_future:true', async () => {
+    const { status, data } = await api('POST', '/api/visits', {
+      restaurant_id: restaurantId,
+      datum: '2099-01-01',
+      uhrzeit: '19:30',
+      betrag: null,
+      bezahlt_von: null
+    })
+    assertEqual(status, 201)
+    assertEqual(data.is_future, true)
+    futureVisitId = data.id
+  })
+
+  await testAsync('RES-02', 'GET /api/visits/:id zeigt is_future und uhrzeit korrekt', async () => {
+    const { data } = await api('GET', `/api/visits/${futureVisitId}`)
+    assertEqual(data.is_future, true)
+    assertEqual(data.uhrzeit, '19:30')
+  })
+
+  await testAsync('RES-03', 'Bewertung für einen zukünftigen Besuch wird abgelehnt (400)', async () => {
+    const { status } = await api('POST', '/api/ratings', {
+      visit_id: futureVisitId,
+      user_id: users[0].id,
+      essen: 5,
+      service: 5,
+      ambiente: 5,
+      preis_leistung: 5
+    })
+    assertEqual(status, 400)
+  })
+
+  await testAsync('RES-04', 'Besuch ohne Uhrzeit, aber mit vergangenem Datum liefert is_future:false', async () => {
+    const { data } = await api('POST', '/api/visits', {
+      restaurant_id: restaurantId,
+      datum: '2020-01-01',
+      betrag: null,
+      bezahlt_von: null
+    })
+    assertEqual(data.is_future, false)
+  })
+
+  await testAsync('RES-05', 'GET /api/restaurants/:id markiert den zukünftigen Besuch ebenfalls als is_future', async () => {
+    const { data } = await api('GET', `/api/restaurants/${restaurantId}`)
+    const v = data.visits.find((x) => x.id === futureVisitId)
+    assert(!!v, 'zukünftiger Besuch nicht in der Besuchsliste gefunden')
+    assertEqual(v.is_future, true)
+    assertEqual(v.uhrzeit, '19:30')
+  })
+
+  console.log('\n📍 PHOTO Fotos zu einem Besuch')
+
+  let photoVisitId, photoId
+  await testAsync('PHOTO-01', 'Besuch für die Foto-Tests anlegen', async () => {
+    const { data } = await api('POST', '/api/visits', {
+      restaurant_id: restaurantId,
+      datum: '2020-02-01',
+      betrag: null,
+      bezahlt_von: null
+    })
+    photoVisitId = data.id
+  })
+
+  await testAsync('PHOTO-02', 'Foto hochladen liefert 201 mit id und url', async () => {
+    const form = new FormData()
+    form.append('photo', testImageFile())
+    form.append('uploaded_by', users[0].id)
+    const { status, data } = await apiUpload(`/api/visits/${photoVisitId}/photos`, form)
+    assertEqual(status, 201)
+    assert(!!data.id, 'keine Foto-id zurückgegeben')
+    assertEqual(data.url, `/api/photos/${data.id}`)
+    photoId = data.id
+  })
+
+  await testAsync('PHOTO-03', 'Foto erscheint im Besuch (GET /api/restaurants/:id) mit Namen des Hochladenden', async () => {
+    const { data } = await api('GET', `/api/restaurants/${restaurantId}`)
+    const v = data.visits.find((x) => x.id === photoVisitId)
+    assert(!!v, 'Besuch nicht gefunden')
+    assertEqual(v.photos.length, 1)
+    assertEqual(v.photos[0].id, photoId)
+    assertEqual(v.photos[0].uploaded_by_name, users[0].name)
+  })
+
+  await testAsync('PHOTO-04', 'GET /api/photos/:id liefert die Bilddatei mit passendem Content-Type', async () => {
+    const res = await fetch(`${BASE}/api/photos/${photoId}`)
+    assertEqual(res.status, 200)
+    assertEqual(res.headers.get('content-type'), 'image/png')
+    const bytes = new Uint8Array(await res.arrayBuffer())
+    assert(bytes.length > 0, 'Bilddaten sind leer')
+  })
+
+  await testAsync('PHOTO-05', 'Upload ohne Datei wird abgelehnt (400)', async () => {
+    const form = new FormData()
+    form.append('uploaded_by', users[0].id)
+    const { status } = await apiUpload(`/api/visits/${photoVisitId}/photos`, form)
+    assertEqual(status, 400)
+  })
+
+  await testAsync('PHOTO-06', 'Upload mit Nicht-Bilddatei wird abgelehnt (400)', async () => {
+    const form = new FormData()
+    form.append('photo', new File([Buffer.from('nicht ein bild')], 'test.txt', { type: 'text/plain' }))
+    form.append('uploaded_by', users[0].id)
+    const { status } = await apiUpload(`/api/visits/${photoVisitId}/photos`, form)
+    assertEqual(status, 400)
+  })
+
+  await testAsync('PHOTO-07', 'Upload für unbekannten Besuch liefert 404', async () => {
+    const form = new FormData()
+    form.append('photo', testImageFile())
+    form.append('uploaded_by', users[0].id)
+    const { status } = await apiUpload('/api/visits/does-not-exist/photos', form)
+    assertEqual(status, 404)
+  })
+
+  await testAsync('PHOTO-08', 'DELETE /api/photos/:id entfernt das Foto, danach 404', async () => {
+    const del = await api('DELETE', `/api/photos/${photoId}`)
+    assertEqual(del.status, 204)
+    const res = await fetch(`${BASE}/api/photos/${photoId}`)
+    assertEqual(res.status, 404)
   })
 
   console.log('\n📍 WISH Wunschliste')

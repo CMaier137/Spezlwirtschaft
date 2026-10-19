@@ -288,10 +288,6 @@ button { cursor: pointer; }
 
 .section-title { font-family: var(--font-display); font-size: 20px; padding: 14px 20px 8px; color: var(--accent-light); }
 
-/* Besuchskarte ist jetzt ein Link zur Bewertungsseite (/besuch/:id/bewerten) */
-a.visit-card { display: block; text-decoration: none; color: inherit; }
-a.visit-card:active { opacity: 0.8; }
-
 /* CTA innerhalb der Besuchskarte: eigene Bewertung abgeben oder bearbeiten.
    Bewusst NICHT .status-banner (das ist für Seiten-Ebene auf dunklem Hintergrund
    gedacht und wirkt innerhalb einer hellen Karte zu blass/unscheinbar). */
@@ -446,6 +442,66 @@ textarea { resize: vertical; }
 .like-btn--liked { border-color: var(--accent); background: var(--accent-bg); color: var(--accent-dark); }
 .like-btn:active { transform: scale(0.96); }
 .like-btn__heart { font-size: 13px; }
+
+/* Aktive Reservierung (Besuch in der Zukunft) — bewusst gestrichelt wie
+   "+ Neues Restaurant anlegen": eine Information, keine antippbare Aktion. */
+.reservation-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  border: 1.5px dashed var(--accent-light);
+  background: rgba(207, 159, 63, 0.12);
+  color: var(--accent-light);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+/* Fotogalerie innerhalb einer Besuchskarte */
+.photo-row { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; padding-bottom: 2px; }
+.photo-thumb {
+  position: relative;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid var(--border-dashed);
+}
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.photo-thumb__delete {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-size: 11px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-add-btn {
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 10px;
+  border: 2px dashed var(--border-dashed);
+  background: none;
+  color: var(--accent-light);
+  font-size: 22px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.photo-add-btn:active { border-color: var(--accent); background: rgba(207, 159, 63, 0.1); }
 
 .remove-btn {
   /* 36px sichtbar, aber mit negativem Margin auf ~44px Tap-Fläche erweitert, ohne optisch zu dominieren */

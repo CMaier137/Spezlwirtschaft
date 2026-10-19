@@ -18,7 +18,8 @@ export default function Home() {
       .then((details) => {
         if (cancelled) return
         const count = details.reduce(
-          (sum, d) => sum + d.visits.filter((v) => !v.ratings.some((r) => r.user_name === currentUser.name)).length,
+          (sum, d) =>
+            sum + d.visits.filter((v) => !v.is_future && !v.ratings.some((r) => r.user_name === currentUser.name)).length,
           0
         )
         setPendingCount(count)

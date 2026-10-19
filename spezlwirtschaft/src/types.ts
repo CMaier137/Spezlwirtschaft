@@ -26,13 +26,23 @@ export interface VisitRating {
   kommentar: string | null
 }
 
+export interface VisitPhoto {
+  id: string
+  url: string
+  uploaded_by_name: string
+  created_at: string
+}
+
 export interface RestaurantVisit {
   id: string
   datum: string
+  uhrzeit: string | null
   betrag: number | null
   bezahlt_von_name: string | null
   avg: number | null
   ratings: VisitRating[]
+  photos: VisitPhoto[]
+  is_future: boolean
 }
 
 export interface RestaurantDetail extends RestaurantSummary {
@@ -69,8 +79,10 @@ export interface PaymentStats {
 export interface VisitDetail {
   id: string
   datum: string
+  uhrzeit: string | null
   restaurant_id: string
   restaurant_name: string
+  is_future: boolean
   ratings: { user_id: string; essen: number; service: number; ambiente: number; preis_leistung: number; kommentar: string | null }[]
   pending_users: User[]
 }

@@ -1,4 +1,4 @@
-import { Env, json, badRequest, newId } from './_shared'
+import { Env, json, badRequest, notFound, newId, isFutureVisit } from './_shared'
 
 interface RatingBody {
   visit_id?: string
@@ -18,6 +18,12 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   for (const field of ['essen', 'service', 'ambiente', 'preis_leistung'] as const) {
     const v = b[field]
     if (typeof v !== 'number' || v < 1 || v > 5) return badRequest(`${field} muss zwischen 1 und 5 liegen`)
+  }
+
+  const visit = await env.DB.prepare('SELECT datum, uhrzeit FROM visits WHERE id = ?1').bind(b.visit_id).first()
+  if (!visit) return notFound('Besuch nicht gefunden')
+  if (isFutureVisit(visit.datum as string, visit.uhrzeit as string | null)) {
+    return badRequest('Dieser Besuch liegt noch in der Zukunft — Bewertung ist erst danach möglich')
   }
 
   const id = newId('rt')
