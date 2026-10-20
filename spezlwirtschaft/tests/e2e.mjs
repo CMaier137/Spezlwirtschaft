@@ -455,6 +455,38 @@ async function main() {
     assertEqual(v.uhrzeit, '19:30')
   })
 
+  await testAsync(
+    'RES-06',
+    'Besuch mit dem heutigen Datum, aber ohne Uhrzeit, gilt sofort als nicht mehr zukünftig',
+    async () => {
+      const today = new Date().toISOString().slice(0, 10)
+      const { data } = await api('POST', '/api/visits', {
+        restaurant_id: restaurantId,
+        datum: today,
+        betrag: null,
+        bezahlt_von: null
+      })
+      assertEqual(data.is_future, false, 'Default-Uhrzeit bei fehlender Angabe muss 00:00 sein, nicht 23:59')
+    }
+  )
+
+  await testAsync(
+    'RES-07',
+    'Besuch mit dem heutigen Datum und einer konkreten, noch bevorstehenden Uhrzeit bleibt zukünftig',
+    async () => {
+      const today = new Date().toISOString().slice(0, 10)
+      // 23:59 UTC ist (fast) immer noch nicht erreicht, wenn der Test läuft.
+      const { data } = await api('POST', '/api/visits', {
+        restaurant_id: restaurantId,
+        datum: today,
+        uhrzeit: '23:59',
+        betrag: null,
+        bezahlt_von: null
+      })
+      assertEqual(data.is_future, true)
+    }
+  )
+
   console.log('\n📍 PHOTO Fotos zu einem Besuch')
 
   let photoVisitId, photoId

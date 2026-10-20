@@ -38,7 +38,13 @@ export function sortColumn(sort: string | null): string {
 }
 
 // Liegt ein Besuch (Datum + optionale Uhrzeit) noch in der Zukunft?
-// Ohne Uhrzeit gilt der ganze Tag noch als "nicht vergangen" (bis 23:59).
+// Ohne Uhrzeit wird 00:00 angenommen — ein Besuch mit dem heutigen Datum,
+// aber ohne Uhrzeit, gilt damit sofort als "nicht mehr in der Zukunft". Das
+// passt zum häufigsten Fall: Besuch direkt nach dem Essen am selben Tag
+// eintragen, ohne Uhrzeit anzugeben (dann sollen Rechnungsbetrag/Zahler:in
+// sofort eintragbar und der Besuch sofort bewertbar sein). Wird dagegen eine
+// konkrete, noch bevorstehende Uhrzeit angegeben, bleibt der Besuch bis dahin
+// korrekt als aktive Reservierung erkannt.
 //
 // Vereinfachung: Datum/Uhrzeit werden als UTC interpretiert statt als
 // tatsächliche lokale Zeit der Nutzer. Für Termine, die Stunden oder Tage im
@@ -46,7 +52,7 @@ export function sortColumn(sort: string | null): string {
 // Umschlagzeitpunkt (±die lokale UTC-Differenz) könnte die Einstufung kurz
 // abweichen. Für eine private 3-Personen-App unproblematisch.
 export function isFutureVisit(datum: string, uhrzeit?: string | null): boolean {
-  const time = uhrzeit && /^\d{2}:\d{2}$/.test(uhrzeit) ? uhrzeit : '23:59'
+  const time = uhrzeit && /^\d{2}:\d{2}$/.test(uhrzeit) ? uhrzeit : '00:00'
   const dt = new Date(`${datum}T${time}:00Z`)
   if (Number.isNaN(dt.getTime())) return false
   return dt.getTime() > Date.now()

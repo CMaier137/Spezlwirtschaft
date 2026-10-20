@@ -4,7 +4,7 @@ import { api } from '../api'
 import BottomNav from '../components/BottomNav'
 import { useUser } from '../context/UserContext'
 import { isFutureVisit } from '../utils/visitTime'
-import type { RestaurantDetail as RestaurantDetailType, RestaurantVisit } from '../types'
+import type { RestaurantDetail as RestaurantDetailType, RestaurantVisit, VisitPhoto } from '../types'
 
 const CATEGORIES = [
   { key: 'avg_essen', label: 'Essen' },
@@ -29,10 +29,30 @@ export default function RestaurantDetail() {
   const [editError, setEditError] = useState<string | null>(null)
   const [editSaving, setEditSaving] = useState(false)
 
+  const [lightbox, setLightbox] = useState<{ photos: VisitPhoto[]; index: number } | null>(null)
+
   function reload() {
     if (id) api.getRestaurant(id).then(setData)
   }
   useEffect(reload, [id])
+
+  // Lightbox: Hintergrund-Scroll sperren (Scroll-Jump-Bugs vermeiden) und
+  // Escape/Pfeiltasten bedienen, solange die Lightbox offen ist.
+  useEffect(() => {
+    if (!lightbox) return
+    document.body.style.overflow = 'hidden'
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setLightbox(null)
+      else if (e.key === 'ArrowRight') setLightbox((lb) => (lb ? { ...lb, index: (lb.index + 1) % lb.photos.length } : lb))
+      else if (e.key === 'ArrowLeft')
+        setLightbox((lb) => (lb ? { ...lb, index: (lb.index - 1 + lb.photos.length) % lb.photos.length } : lb))
+    }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.body.style.overflow = ''
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [lightbox])
 
   async function handlePhotoSelect(visitId: string, e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
@@ -171,11 +191,15 @@ export default function RestaurantDetail() {
                 ))}
 
               <div className="photo-row">
-                {v.photos.map((p) => (
+                {v.photos.map((p, i) => (
                   <div className="photo-thumb" key={p.id}>
-                    <a href={p.url} target="_blank" rel="noreferrer">
+                    <button
+                      type="button"
+                      className="photo-thumb__open"
+                      onClick={() => setLightbox({ photos: v.photos, index: i })}
+                    >
                       <img src={p.url} alt={`Foto von ${p.uploaded_by_name}`} loading="lazy" />
-                    </a>
+                    </button>
                     <button
                       type="button"
                       className="photo-thumb__delete"
@@ -280,6 +304,45 @@ export default function RestaurantDetail() {
           )
         })}
       </div>
+
+      {lightbox && (
+        <div className="lightbox-backdrop" onClick={() => setLightbox(null)}>
+          <div className="lightbox" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={lightbox.photos[lightbox.index].url}
+              alt={`Foto von ${lightbox.photos[lightbox.index].uploaded_by_name}`}
+            />
+            <button type="button" className="lightbox__close" aria-label="Schließen" onClick={() => setLightbox(null)}>
+              ✕
+            </button>
+            {lightbox.photos.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="lightbox__nav lightbox__nav--prev"
+                  aria-label="Vorheriges Foto"
+                  onClick={() =>
+                    setLightbox((lb) => (lb ? { ...lb, index: (lb.index - 1 + lb.photos.length) % lb.photos.length } : lb))
+                  }
+                >
+                  ‹
+                </button>
+                <button
+                  type="button"
+                  className="lightbox__nav lightbox__nav--next"
+                  aria-label="Nächstes Foto"
+                  onClick={() => setLightbox((lb) => (lb ? { ...lb, index: (lb.index + 1) % lb.photos.length } : lb))}
+                >
+                  ›
+                </button>
+                <div className="lightbox__counter">
+                  {lightbox.index + 1} / {lightbox.photos.length}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       <BottomNav />
     </div>

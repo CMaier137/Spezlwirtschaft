@@ -56,7 +56,7 @@ export default function Wishlist() {
   return (
     <div className="page">
       <div className="topbar">
-        <div className="page-title">Wunschliste</div>
+        <div className="page-title">wo mägstn hi?</div>
       </div>
 
       <div className="segmented">

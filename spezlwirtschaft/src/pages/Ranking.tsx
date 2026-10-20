@@ -42,7 +42,7 @@ export default function Ranking() {
         {currentUser && <div className="avatar avatar--sm">{currentUser.name[0]}</div>}
       </div>
 
-      <h1 className="page-title">Rangliste besuchter Restaurants</h1>
+      <h1 className="page-title">Wo warma denn scho überoi</h1>
 
       <div className="chip-row">
         {kuechen.map((k) => (

@@ -17,7 +17,7 @@ export default function Payments() {
   return (
     <div className="page">
       <div className="topbar">
-        <div className="page-title">Zahlungen</div>
+        <div className="page-title">Geldbeidl raus</div>
       </div>
 
       {(stats.next_up || stats.last_paid) && (
