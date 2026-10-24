@@ -42,6 +42,7 @@ export default function NewVisit() {
   }, [currentUser, bezahltVon])
 
   const willBeFuture = isFutureVisit(datum, uhrzeit || null)
+  const popularWishes = wishlistItems.filter((w) => w.like_count >= 2)
 
   function pickWish(item: WishlistItem) {
     setCreatingNew(true)
@@ -138,23 +139,29 @@ export default function NewVisit() {
             </>
           ) : (
             <>
-              {wishlistItems.length > 0 ? (
+              {popularWishes.length > 0 ? (
                 <div className="chip-row" style={{ padding: 0, flexWrap: 'wrap' }}>
-                  {wishlistItems.map((w) => (
+                  {popularWishes.map((w) => (
                     <button type="button" key={w.id} className="chip" onClick={() => pickWish(w)}>
                       {w.name} <span style={{ opacity: 0.7 }}>♥{w.like_count}</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="hint" style={{ margin: 0 }}>Noch keine Einträge auf der Wunschliste.</p>
+                <button
+                  type="button"
+                  className="text-link text-link--cta"
+                  onClick={() => navigate('/wunschliste')}
+                >
+                  Aus Wunschliste auswählen
+                </button>
               )}
               <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
                 <button type="button" className="text-link text-link--cta" onClick={() => setCreatingNew(true)}>
                   + Neues Restaurant anlegen
                 </button>
                 <button type="button" className="text-link" onClick={() => setShowExisting(true)}>
-                  Schon mal dort gewesen?
+                  Bereits besuchtes Restaurant auswählen
                 </button>
               </div>
             </>

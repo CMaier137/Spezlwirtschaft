@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import BottomNav from '../components/BottomNav'
@@ -14,11 +14,19 @@ export default function Wishlist() {
   const [ort, setOrt] = useState('')
   const [kueche, setKueche] = useState('')
   const [notiz, setNotiz] = useState('')
+  const formRef = useRef<HTMLFormElement>(null)
 
   function reload() {
     api.getWishlist(currentUser?.id).then(setItems)
   }
   useEffect(reload, [currentUser])
+
+  // Beim Öffnen des Formulars (Klick auf "+") automatisch dorthin scrollen,
+  // damit sofort sichtbar ist, dass etwas auszufüllen ist — besonders bei
+  // einer langen Liste, wo der Button weit oben im sichtbaren Bereich sitzt.
+  useEffect(() => {
+    if (showForm) formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }, [showForm])
 
   const openItems = items.filter((i) => i.status === 'offen')
   const mineCount = openItems.filter((i) => i.vorgeschlagen_von === currentUser?.id).length
@@ -116,7 +124,7 @@ export default function Wishlist() {
       </div>
 
       {showForm ? (
-        <form className="form form--sheet" onSubmit={handleAdd}>
+        <form className="form form--sheet" onSubmit={handleAdd} ref={formRef}>
           <input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} required />
           <input placeholder="Ort (optional)" value={ort} onChange={(e) => setOrt(e.target.value)} />
           <input
