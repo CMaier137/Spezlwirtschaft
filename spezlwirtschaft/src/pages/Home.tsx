@@ -4,10 +4,25 @@ import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import BottomNav from '../components/BottomNav'
 
+// Chrome/Android/Edge feuern dieses Event, wenn die Seite installierbar ist;
+// im Standard-TS-DOM-Lib (noch) nicht typisiert.
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>
+}
+
+const INSTALL_HINT_DISMISSED_KEY = 'spezl-install-hint-dismissed'
+
 export default function Home() {
   const { users, currentUser, chooseUser } = useUser()
   const [pendingCount, setPendingCount] = useState<number | null>(null)
   const [wishlistCount, setWishlistCount] = useState<number | null>(null)
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null)
+  const [isStandalone, setIsStandalone] = useState(false)
+  const [hintDismissed, setHintDismissed] = useState(
+    () => localStorage.getItem(INSTALL_HINT_DISMISSED_KEY) === '1'
+  )
+  const isIOS = /iphone|ipad|ipod/i.test(window.navigator.userAgent)
 
   useEffect(() => {
     if (!currentUser) return
@@ -33,8 +48,88 @@ export default function Home() {
     api.getWishlist().then((items) => setWishlistCount(items.filter((i) => i.status === 'offen').length))
   }, [])
 
+  // Erkennt, ob die App bereits "installiert" (zum Home-Bildschirm hinzugefügt)
+  // läuft — dann macht der Hinweis keinen Sinn mehr. display-mode:standalone
+  // deckt Android/Chrome/Edge ab, navigator.standalone das ältere iOS-Pendant.
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true
+    setIsStandalone(standalone)
+  }, [])
+
+  // Chrome/Android/Edge: bietet einen echten Install-Button statt nur Text.
+  // iOS kennt dieses Event nicht — dort bleibt es bei der Anleitung unten.
+  useEffect(() => {
+    function onBeforeInstallPrompt(e: Event) {
+      e.preventDefault()
+      setInstallPrompt(e as BeforeInstallPromptEvent)
+    }
+    function onInstalled() {
+      setInstallPrompt(null)
+      setIsStandalone(true)
+    }
+    window.addEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onBeforeInstallPrompt)
+      window.removeEventListener('appinstalled', onInstalled)
+    }
+  }, [])
+
+  async function handleInstall() {
+    if (!installPrompt) return
+    await installPrompt.prompt()
+    setInstallPrompt(null)
+  }
+
+  function dismissInstallHint() {
+    localStorage.setItem(INSTALL_HINT_DISMISSED_KEY, '1')
+    setHintDismissed(true)
+  }
+
+  const showInstallHint = !isStandalone && !hintDismissed
+
   return (
     <div className="page">
+      {showInstallHint && (
+        <div className="install-hint">
+          <span className="install-hint__icon">📲</span>
+          <div className="install-hint__text">
+            {installPrompt ? (
+              <>
+                Hol dir die <strong>Spezlwirtschaft</strong> als App — schneller Zugriff direkt vom Home-Bildschirm.
+              </>
+            ) : isIOS ? (
+              <>
+                Hol dir die <strong>Spezlwirtschaft</strong> als App: Tippe unten auf <strong>Teilen</strong> ⬆️ und
+                dann auf <strong>„Zum Home-Bildschirm“</strong>.
+              </>
+            ) : (
+              <>
+                Hol dir die <strong>Spezlwirtschaft</strong> als App — im Browser-Menü „Zum Startbildschirm
+                hinzufügen“ wählen.
+              </>
+            )}
+          </div>
+          <div className="install-hint__actions">
+            {installPrompt && (
+              <button type="button" className="install-hint__btn" onClick={handleInstall}>
+                Installieren
+              </button>
+            )}
+            <button
+              type="button"
+              className="install-hint__close"
+              onClick={dismissInstallHint}
+              aria-label="Hinweis schließen"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="topbar topbar--brand">
         <div className="brand">Spezlwirtschaft</div>
       </div>
