@@ -4,6 +4,7 @@ import { api } from '../api'
 import BottomNav from '../components/BottomNav'
 import { useUser } from '../context/UserContext'
 import { isFutureVisit } from '../utils/visitTime'
+import { prepareImageForUpload } from '../utils/photoUpload'
 import type { RestaurantDetail as RestaurantDetailType, RestaurantVisit, VisitPhoto } from '../types'
 
 const CATEGORIES = [
@@ -55,12 +56,16 @@ export default function RestaurantDetail() {
   }, [lightbox])
 
   async function handlePhotoSelect(visitId: string, e: ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
+    const rawFile = e.target.files?.[0]
     e.target.value = '' // dieselbe Datei danach erneut auswählbar machen
-    if (!file || !currentUser) return
+    if (!rawFile || !currentUser) return
     setPhotoError(null)
     setUploadingVisitId(visitId)
     try {
+      // HEIC-Fotos (iPhone-Standardformat) vorher in JPEG umwandeln, damit
+      // sie auch auf Geräten ohne HEIC-Unterstützung (z. B. Android/Chrome)
+      // angezeigt werden können — s. utils/photoUpload.ts.
+      const file = await prepareImageForUpload(rawFile)
       await api.uploadVisitPhoto(visitId, currentUser.id, file)
       reload()
     } catch (err) {

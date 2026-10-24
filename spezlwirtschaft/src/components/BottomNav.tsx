@@ -16,7 +16,7 @@ export default function BottomNav() {
       </NavLink>
       <NavLink to="/wunschliste" className={itemClass}>
         <HeartIcon />
-        <span>Wunsch</span>
+        <span>Wunschliste</span>
       </NavLink>
       <NavLink to="/besuch/neu" className={itemClass}>
         <RestaurantIcon />

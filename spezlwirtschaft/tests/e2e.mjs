@@ -558,6 +558,40 @@ async function main() {
     assertEqual(res.status, 404)
   })
 
+  await testAsync(
+    'PHOTO-09',
+    'Upload ohne Content-Type (z. B. manche mobilen Browser bei HEIC) wird anhand der Dateiendung erkannt statt abgelehnt',
+    async () => {
+      const form = new FormData()
+      // file.type bewusst leer — simuliert einen Browser, der bei einer
+      // HEIC-Datei gar keinen Content-Type mitschickt (realer Bug-Report:
+      // Foto-Upload von einem iPhone schlug ohne Fehlermeldung fehl).
+      form.append('photo', testImageFile('IMG_1234.heic', ''))
+      form.append('uploaded_by', users[0].id)
+      const { status, data } = await apiUpload(`/api/visits/${photoVisitId}/photos`, form)
+      assertEqual(status, 201, 'Upload ohne Content-Type, aber mit .heic-Endung, muss trotzdem angenommen werden')
+      assert(!!data.id, 'keine Foto-id zurückgegeben')
+
+      const res = await fetch(`${BASE}/api/photos/${data.id}`)
+      assertEqual(res.status, 200)
+      assertEqual(res.headers.get('content-type'), 'image/heic', 'Content-Type muss anhand der Dateiendung erkannt worden sein')
+
+      await api('DELETE', `/api/photos/${data.id}`)
+    }
+  )
+
+  await testAsync(
+    'PHOTO-10',
+    'Upload ohne Content-Type und ohne erkennbare Bild-Dateiendung wird weiterhin abgelehnt (400)',
+    async () => {
+      const form = new FormData()
+      form.append('photo', testImageFile('mysteriousfile.xyz', ''))
+      form.append('uploaded_by', users[0].id)
+      const { status } = await apiUpload(`/api/visits/${photoVisitId}/photos`, form)
+      assertEqual(status, 400)
+    }
+  )
+
   console.log('\n📍 VEDIT Besuch bearbeiten/löschen (PATCH & DELETE /api/visits/:id)')
 
   let vEditVisitId

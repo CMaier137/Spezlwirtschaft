@@ -10,9 +10,10 @@ export default function NewVisit() {
   const navigate = useNavigate()
   const { users, currentUser } = useUser()
   const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([])
-  const [topWishes, setTopWishes] = useState<WishlistItem[]>([])
+  const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
   const [restaurantId, setRestaurantId] = useState('')
   const [creatingNew, setCreatingNew] = useState(false)
+  const [showExisting, setShowExisting] = useState(false)
   const [newName, setNewName] = useState('')
   const [newOrt, setNewOrt] = useState('')
   const [newKueche, setNewKueche] = useState('')
@@ -29,11 +30,10 @@ export default function NewVisit() {
 
   useEffect(() => {
     api.getWishlist(currentUser?.id).then((items) => {
-      const top = items
-        .filter((i) => i.status === 'offen' && i.like_count > 0)
-        .sort((a, b) => b.like_count - a.like_count)
-        .slice(0, 3)
-      setTopWishes(top)
+      const open = items
+        .filter((i) => i.status === 'offen')
+        .sort((a, b) => b.like_count - a.like_count || (a.created_at < b.created_at ? 1 : -1))
+      setWishlistItems(open)
     })
   }, [currentUser])
 
@@ -45,6 +45,7 @@ export default function NewVisit() {
 
   function pickWish(item: WishlistItem) {
     setCreatingNew(true)
+    setShowExisting(false)
     setNewName(item.name)
     setNewOrt(item.ort ?? '')
     setNewKueche(item.kueche ?? '')
@@ -98,22 +99,22 @@ export default function NewVisit() {
       </div>
 
       <form className="form" onSubmit={handleSubmit}>
-        {topWishes.length > 0 && (
-          <div className="field">
-            <span className="field__label">Top-Wünsche</span>
-            <div className="chip-row" style={{ padding: 0 }}>
-              {topWishes.map((w) => (
-                <button type="button" key={w.id} className="chip" onClick={() => pickWish(w)}>
-                  {w.name} <span style={{ opacity: 0.7 }}>♥{w.like_count}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
         <div className="field">
           <span className="field__label">Restaurant</span>
-          {!creatingNew ? (
+          {creatingNew ? (
+            <div className="new-restaurant-fields">
+              <input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
+              <input placeholder="Ort" value={newOrt} onChange={(e) => setNewOrt(e.target.value)} />
+              <input
+                placeholder="Kulinarische Richtung"
+                value={newKueche}
+                onChange={(e) => setNewKueche(e.target.value)}
+              />
+              <button type="button" className="text-link" onClick={() => setCreatingNew(false)}>
+                Stattdessen von der Wunschliste wählen
+              </button>
+            </div>
+          ) : showExisting ? (
             <>
               <select value={restaurantId} onChange={(e) => setRestaurantId(e.target.value)}>
                 <option value="">Restaurant wählen …</option>
@@ -125,26 +126,38 @@ export default function NewVisit() {
               </select>
               <button
                 type="button"
-                className="text-link text-link--cta"
-                onClick={() => setCreatingNew(true)}
+                className="text-link"
+                onClick={() => {
+                  setShowExisting(false)
+                  setRestaurantId('')
+                }}
                 style={{ marginTop: 8 }}
               >
-                + Neues Restaurant anlegen
+                Zurück zur Wunschliste
               </button>
             </>
           ) : (
-            <div className="new-restaurant-fields">
-              <input placeholder="Name" value={newName} onChange={(e) => setNewName(e.target.value)} />
-              <input placeholder="Ort" value={newOrt} onChange={(e) => setNewOrt(e.target.value)} />
-              <input
-                placeholder="Kulinarische Richtung"
-                value={newKueche}
-                onChange={(e) => setNewKueche(e.target.value)}
-              />
-              <button type="button" className="text-link" onClick={() => setCreatingNew(false)}>
-                Stattdessen bestehendes Restaurant wählen
-              </button>
-            </div>
+            <>
+              {wishlistItems.length > 0 ? (
+                <div className="chip-row" style={{ padding: 0, flexWrap: 'wrap' }}>
+                  {wishlistItems.map((w) => (
+                    <button type="button" key={w.id} className="chip" onClick={() => pickWish(w)}>
+                      {w.name} <span style={{ opacity: 0.7 }}>♥{w.like_count}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <p className="hint" style={{ margin: 0 }}>Noch keine Einträge auf der Wunschliste.</p>
+              )}
+              <div style={{ display: 'flex', gap: 16, marginTop: 8 }}>
+                <button type="button" className="text-link text-link--cta" onClick={() => setCreatingNew(true)}>
+                  + Neues Restaurant anlegen
+                </button>
+                <button type="button" className="text-link" onClick={() => setShowExisting(true)}>
+                  Schon mal dort gewesen?
+                </button>
+              </div>
+            </>
           )}
         </div>
 

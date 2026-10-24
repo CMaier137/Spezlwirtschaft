@@ -64,7 +64,40 @@ export const PHOTO_EXT: Record<string, string> = {
   'image/png': 'png',
   'image/webp': 'webp',
   'image/gif': 'gif',
-  'image/heic': 'heic'
+  'image/heic': 'heic',
+  'image/heif': 'heif'
+}
+
+// Fallback, falls der Browser beim Upload gar keinen (oder einen leeren)
+// Content-Type mitschickt — kommt in der Praxis bei manchen mobilen Browsern
+// speziell bei HEIC/HEIF-Fotos vor. Dann wird der Typ anhand der
+// Dateiendung geraten, statt den Upload pauschal abzulehnen.
+export const IMAGE_TYPE_BY_EXT: Record<string, string> = {
+  jpg: 'image/jpeg',
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+  gif: 'image/gif',
+  heic: 'image/heic',
+  heif: 'image/heif'
+}
+
+// Ermittelt einen Bild-Content-Type für eine hochgeladene Datei: bevorzugt
+// den vom Browser gesetzten `file.type`, sonst anhand der Dateiendung
+// geschätzt. Gibt null zurück, wenn beides fehlschlägt (dann wird der Upload
+// abgelehnt).
+//
+// "application/octet-stream" wird wie ein fehlender Content-Type behandelt:
+// das ist der Standard-Fallback-Wert, den Browser für multipart/form-data
+// einsetzen, wenn sie den eigentlichen Dateityp nicht erkennen (kommt in der
+// Praxis bei HEIC/HEIF-Fotos von manchen mobilen Browsern vor) — ein echtes,
+// leeres `file.type` ist beim tatsächlichen Transport über HTTP selten zu
+// erwarten.
+export function resolveImageType(file: File): string | null {
+  if (file.type && file.type !== 'application/octet-stream') return file.type
+  const match = /\.([a-z0-9]+)$/i.exec(file.name || '')
+  const ext = match?.[1]?.toLowerCase()
+  return ext ? (IMAGE_TYPE_BY_EXT[ext] ?? null) : null
 }
 
 // Score-Query: pro Besuch werden zuerst die Kategorie-Durchschnitte über alle

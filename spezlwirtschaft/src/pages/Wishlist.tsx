@@ -7,7 +7,7 @@ import type { WishlistItem } from '../types'
 export default function Wishlist() {
   const { currentUser } = useUser()
   const [items, setItems] = useState<WishlistItem[]>([])
-  const [tab, setTab] = useState<'mine' | 'all'>('mine')
+  const [tab, setTab] = useState<'mine' | 'all'>('all')
   const [sortMode, setSortMode] = useState<'popular' | 'neu'>('popular')
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState('')
@@ -56,7 +56,7 @@ export default function Wishlist() {
   return (
     <div className="page">
       <div className="topbar">
-        <div className="page-title">Wo mägstn hi?</div>
+        <div className="page-title">wo mägstn hi?</div>
       </div>
 
       <div className="segmented">
