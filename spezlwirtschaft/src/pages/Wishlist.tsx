@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import BottomNav from '../components/BottomNav'
 import type { WishlistItem } from '../types'
 
 export default function Wishlist() {
+  const navigate = useNavigate()
   const { currentUser } = useUser()
   const [items, setItems] = useState<WishlistItem[]>([])
   const [tab, setTab] = useState<'mine' | 'all'>('all')
@@ -61,6 +63,15 @@ export default function Wishlist() {
     reload()
   }
 
+  // Plant direkt einen Besuch für diesen Wunsch — macht auf "Neuer Besuch"
+  // genau das, was ein Klick auf den Wunsch-Chip dort auch tut (Name/Ort/
+  // Küche vorausfüllen, "Neues Restaurant anlegen"-Modus), nur eben direkt
+  // von der Wunschliste aus angestoßen. Datum/Uhrzeit etc. bleiben dort
+  // weiterhin manuell einzutragen.
+  function planVisit(item: WishlistItem) {
+    navigate('/besuch/neu', { state: { wish: item } })
+  }
+
   return (
     <div className="page">
       <div className="topbar">
@@ -115,9 +126,24 @@ export default function Wishlist() {
                   </button>
                 )}
               </div>
-              <button className="remove-btn" onClick={() => markDone(item.id)} aria-label="Als erledigt markieren">
-                ✕
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginLeft: 'auto', flexShrink: 0 }}>
+                <button
+                  type="button"
+                  className="visit-icon-btn"
+                  onClick={() => planVisit(item)}
+                  aria-label="Besuch für diesen Wunsch planen"
+                >
+                  📅
+                </button>
+                <button
+                  className="remove-btn"
+                  style={{ margin: 0 }}
+                  onClick={() => markDone(item.id)}
+                  aria-label="Als erledigt markieren"
+                >
+                  ✕
+                </button>
+              </div>
             </div>
           )
         })}

@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../context/UserContext'
 import BottomNav from '../components/BottomNav'
@@ -8,6 +8,7 @@ import type { RestaurantSummary, WishlistItem } from '../types'
 
 export default function NewVisit() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { users, currentUser } = useUser()
   const [restaurants, setRestaurants] = useState<RestaurantSummary[]>([])
   const [wishlistItems, setWishlistItems] = useState<WishlistItem[]>([])
@@ -51,6 +52,17 @@ export default function NewVisit() {
     setNewOrt(item.ort ?? '')
     setNewKueche(item.kueche ?? '')
   }
+
+  // Direktsprung von der Wunschliste über das Kalender-Symbol: übernimmt
+  // Name/Ort/Küche des gewählten Wunschs automatisch (wie beim Klick auf
+  // einen Wunsch-Chip), Datum/Uhrzeit etc. bleiben weiterhin manuell zu
+  // definieren. Läuft nur einmal beim Mount — die Seite wird bei jeder
+  // Navigation von der Wunschliste hierher frisch gemountet.
+  useEffect(() => {
+    const wish = (location.state as { wish?: WishlistItem } | null)?.wish
+    if (wish) pickWish(wish)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault()
