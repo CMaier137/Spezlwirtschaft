@@ -116,3 +116,5 @@ Das baut das Projekt, legt eine frische lokale Test-Datenbank an, startet die Ap
 - **Kein echtes Login**: Die Nutzerauswahl wird im `localStorage` des Geräts gemerkt, es gibt keinen Passwortschutz für die API. Für einen privaten Dreierkreis ausreichend; bei Bedarf lässt sich später ein einfacher Shared-Secret-Header ergänzen.
 - **Platzhalter-Icons**: `public/icons/*.png` sind einfache generierte Icons — gerne durch eigene ersetzen (192×192 und 512×512 PNG).
 - **Phase 2** (automatische Restaurantvorschläge, Push-Erinnerungen) ist bewusst noch nicht enthalten, siehe Konzeptdokument.
+
+<!-- Sync-Check: Verbindung Claude ↔ VS Code nach Notebook-Neuaufsetzung getestet am 24.11.2026 — kann nach Bestätigung wieder entfernt werden. -->
